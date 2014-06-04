@@ -225,7 +225,7 @@ Person.model_name.singular_route_key  # => "person"
 
 ### Model
 
-`Model` adds the ability to a class to work with Action Pack out of box.
+`Model` adds the ability to a class to work with Action Pack and Action View out of box.
 
 ```ruby
 class EmailContact
