@@ -441,7 +441,7 @@ Test whether an object is compliant with the Active Model API.
 
     ```ruby
     class person
-      include activemodel::model
+      include ActiveModel::Model
 
     end
     ```
