@@ -298,6 +298,20 @@ module Rails
         end
       end
 
+      # This "npm-ifies" the current version number
+      # With npm, versions such as "5.0.0.rc1" or "5.0.0.beta1.1" are not compliant with its
+      # versioning system, so they must be transformed to "5.0.0-rc1" and "5.0.0-beta1-1" respectively.
+
+      # "5.0.1"     --> "5.0.1"
+      # "5.0.1.1"   --> "5.0.1-1" *
+      # "5.0.0.rc1" --> "5.0.0-rc1"
+      #
+      # * This makes it a prerelease. That's bad, but we haven't come up with
+      # a better solution at the moment.
+      def npm_version
+        Rails.version.gsub(/\./).with_index { |s, i| i >= 2 ? "-" : s }
+      end
+
       def assets_gemfile_entry
         return [] if options[:skip_sprockets]
 

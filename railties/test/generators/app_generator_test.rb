@@ -531,6 +531,16 @@ class AppGeneratorTest < Rails::Generators::TestCase
     end
   end
 
+  def test_package_json_uses_current_version
+    run_generator
+    generator = Rails::Generators::AppBase.new ["rails"]
+    version = generator.send(:npm_version)
+
+    assert_file "package.json" do |content|
+      assert_match(/"@rails\/ujs": "\^#{version}"/, content)
+    end
+  end
+
   def test_config_database_is_added_by_default
     run_generator
     assert_file "config/database.yml", /sqlite3/
