@@ -147,6 +147,7 @@ module ActionController
         unless @response.committed?
           @response.headers["Cache-Control"] ||= "no-cache"
           @response.delete_header "Content-Length"
+          @response.headers["Last-Modified"] ||= Time.now.httpdate
         end
 
         super

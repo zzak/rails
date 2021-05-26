@@ -425,6 +425,7 @@ module ActionController
     def test_live_stream_default_header
       get :default_header
       assert response.headers["Content-Type"]
+      assert response.headers["Last-Modified"]
     end
 
     def test_render_text

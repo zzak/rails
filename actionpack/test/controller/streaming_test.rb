@@ -23,6 +23,7 @@ module ActionController
     def test_write_to_stream
       get :basic_stream
       assert_equal "hello\nworld\n", @response.body
+      assert @response.headers["Last-Modified"]
     end
   end
 end
