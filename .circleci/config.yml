@@ -51,6 +51,9 @@ jobs:
           name: Bundle install
           command: rm Gemfile.lock && bundle install
       - run:
+          name: Yarn install
+          command: yarn install
+      - run:
           name: Test
           command: cd actioncable && bundle exec rake test:integration
 
