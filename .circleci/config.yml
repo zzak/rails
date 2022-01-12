@@ -36,7 +36,10 @@ jobs:
       - image: cimg/ruby:3.1
     steps:
       - checkout
-      - ruby/install-deps
+      #- ruby/install-deps
+      - run:
+          name: Bundle install
+          command: rm Gemfile.lock && bundle install
       - run:
           name: Test
           command: cd actioncable && rake test
