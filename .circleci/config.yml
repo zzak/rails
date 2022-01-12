@@ -34,6 +34,7 @@ jobs:
   actioncable:
     docker:
       - image: cimg/ruby:3.1
+      - image: circleci/redis
     steps:
       - checkout
       #- ruby/install-deps
@@ -42,7 +43,7 @@ jobs:
           command: rm Gemfile.lock && bundle install
       - run:
           name: Test
-          command: cd actioncable && rake test
+          command: cd actioncable && bin/test
 
 workflows:
   version: 2
