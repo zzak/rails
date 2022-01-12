@@ -30,11 +30,24 @@ version: 2.1
 orbs:
   browser-tools: circleci/browser-tools@1.2.3
 
-jobs:
-  actioncable:
+executors:
+  base:
     docker:
       - image: cimg/ruby:3.1
+  redis:
+    docker:
+      - image: cimg/ruby:3.1-browsers
       - image: circleci/redis
+
+jobs:
+  test-job:
+    parameters:
+      gem:
+        type: string
+      exe:
+        type: executor
+        default: base
+    executor: << parameters.exe >>
     steps:
       - checkout
       - run:
@@ -42,7 +55,7 @@ jobs:
           command: rm Gemfile.lock && bundle install
       - run:
           name: Test
-          command: cd actioncable && bin/test
+          command: cd << parameters.gem >> && bin/test
 
   actioncable-integration:
     docker:
@@ -89,9 +102,16 @@ workflows:
   version: 2
   test:
     jobs:
-      - actioncable
-      - actioncable-integration
-      - actionmailbox
-      - actionmailer
+      - test-job:
+          name: actioncable
+          gem: actioncable
+          exe: redis
+      #- actioncable-integration
+      - test-job:
+          name: actionmailbox
+          gem: actionmailbox
+      - test-job:
+          name: actionmailer
+          gem: actionmailer
 
 
