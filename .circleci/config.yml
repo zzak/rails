@@ -1,0 +1,50 @@
+# rubies:
+#   - 3.1
+#   - 3.0
+#   - 2.7
+
+# rails:
+#   - actioncable
+#     - integration
+#   - actionmailbox
+#   - actionmailer
+#   - actionpack
+#   - actiontext
+#   - actionview
+#     - ujs
+#   - activemodel
+#   - activerecord
+#     - mysql2
+#     - postgresql
+#     - sqlite3
+#     - sqlite3_mem
+#   - activestorage
+#   - activesupport
+#   - guides
+#   - railties
+#   - activejob
+#     - integration
+
+version: 2.1
+
+orbs:
+  ruby: circleci/ruby@1.0
+
+jobs:
+  actioncable:
+    docker:
+      - image: cimg/ruby:3.1
+    steps:
+      - checkout
+      - ruby/install-deps
+      - run:
+        name: Test
+        command: cd actioncable && rake test
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - actioncable
+
+
