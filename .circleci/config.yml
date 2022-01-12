@@ -27,9 +27,6 @@
 
 version: 2.1
 
-orbs:
-  ruby: circleci/ruby@1.0
-
 jobs:
   actioncable:
     docker:
@@ -37,7 +34,6 @@ jobs:
       - image: circleci/redis
     steps:
       - checkout
-      #- ruby/install-deps
       - run:
           name: Bundle install
           command: rm Gemfile.lock && bundle install
