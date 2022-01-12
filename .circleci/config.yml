@@ -27,6 +27,9 @@
 
 version: 2.1
 
+orbs:
+  browser-tools: circleci/browser-tools@1.2.3
+
 jobs:
   actioncable:
     docker:
@@ -47,6 +50,7 @@ jobs:
       - image: circleci/redis
     steps:
       - checkout
+      - browser-tools/install-browser-tools
       - run:
           name: Bundle install
           command: rm Gemfile.lock && bundle install
