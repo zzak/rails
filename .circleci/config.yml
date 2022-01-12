@@ -104,6 +104,7 @@ workflows:
       - test-job:
           name: activesupport
           gem: activesupport
+          exe: redis
       - test-job:
           name: guides
           gem: guides
