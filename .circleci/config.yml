@@ -52,7 +52,31 @@ jobs:
           command: rm Gemfile.lock && bundle install
       - run:
           name: Test
-          command: cd actioncable && bundle exec rake test:integration
+          command: cd actioncable && rake test:integration
+
+  actionmailbox:
+    docker:
+      - image: cimg/ruby:3.1
+    steps:
+      - checkout
+      - run:
+          name: Bundle install
+          command: rm Gemfile.lock && bundle install
+      - run:
+          name: Test
+          command: cd actionmailbox && bin/test
+
+  actionmailer:
+    docker:
+      - image: cimg/ruby:3.1
+    steps:
+      - checkout
+      - run:
+          name: Bundle install
+          command: rm Gemfile.lock && bundle install
+      - run:
+          name: Test
+          command: cd actionmailer && bin/test
 
 workflows:
   version: 2
@@ -60,5 +84,7 @@ workflows:
     jobs:
       - actioncable
       - actioncable-integration
+      - actionmailbox
+      - actionmailer
 
 
