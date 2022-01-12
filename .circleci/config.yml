@@ -74,30 +74,6 @@ jobs:
           name: Test
           command: cd actioncable && bundle exec rake test:integration
 
-  actionmailbox:
-    docker:
-      - image: cimg/ruby:3.1
-    steps:
-      - checkout
-      - run:
-          name: Bundle install
-          command: rm Gemfile.lock && bundle install
-      - run:
-          name: Test
-          command: cd actionmailbox && bin/test
-
-  actionmailer:
-    docker:
-      - image: cimg/ruby:3.1
-    steps:
-      - checkout
-      - run:
-          name: Bundle install
-          command: rm Gemfile.lock && bundle install
-      - run:
-          name: Test
-          command: cd actionmailer && bin/test
-
 workflows:
   version: 2
   test:
@@ -113,5 +89,27 @@ workflows:
       - test-job:
           name: actionmailer
           gem: actionmailer
+      - test-job:
+          name: actionpack
+          gem: actionpack
+      - test-job:
+          name: actiontext
+          gem: actiontext
+      - test-job:
+          name: actionview
+          gem: actionview
+      - test-job:
+          name: activestorage
+          gem: activestorage
+      - test-job:
+          name: activesupport
+          gem: activesupport
+      - test-job:
+          name: guides
+          gem: guides
+      - test-job:
+          name: activejob
+          gem: activejob
+
 
 
