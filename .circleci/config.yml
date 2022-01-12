@@ -43,7 +43,7 @@ jobs:
 
   actioncable-integration:
     docker:
-      - image: cimg/ruby:3.1-node
+      - image: cimg/ruby:3.1-browsers
       - image: circleci/redis
     steps:
       - checkout
