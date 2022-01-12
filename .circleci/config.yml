@@ -38,8 +38,8 @@ jobs:
       - checkout
       - ruby/install-deps
       - run:
-        name: Test
-        command: cd actioncable && rake test
+          name: Test
+          command: cd actioncable && rake test
 
 workflows:
   version: 2
