@@ -41,7 +41,7 @@ jobs:
           name: Test
           command: cd actioncable && bin/test
 
-   actioncable-integration:
+  actioncable-integration:
     docker:
       - image: cimg/ruby:3.1
       - image: circleci/redis
