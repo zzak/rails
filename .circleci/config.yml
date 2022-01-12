@@ -43,7 +43,7 @@ jobs:
 
   actioncable-integration:
     docker:
-      - image: cimg/ruby:3.1
+      - image: cimg/ruby:3.1-node
       - image: circleci/redis
     steps:
       - checkout
@@ -52,7 +52,7 @@ jobs:
           command: rm Gemfile.lock && bundle install
       - run:
           name: Test
-          command: cd actioncable && rake test:integration
+          command: cd actioncable && bundle exec rake test:integration
 
   actionmailbox:
     docker:
