@@ -105,7 +105,7 @@ jobs:
       - run:
           name: Run tests
           command: |
-            docker-compose -f .circleci/docker-compose.yml run bash -c \
+            docker-compose -f .circleci/docker-compose.yml run app bash -c \
               "rm Gemfile.lock && bundle install && \
               cd << parameters.gem >> && << parameters.command >>"
 
