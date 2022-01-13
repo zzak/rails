@@ -37,7 +37,7 @@ jobs:
         type: string
       command:
         type: string
-        default: "rake test"
+        default: rake test
     docker:
       - image: docker:17.05.0-ce-git
     working_directory: /app
@@ -79,7 +79,7 @@ jobs:
           name: Run tests
           command: |
             export COMPOSE_TLS_VERSION=TLSv1_2 && \
-            docker-compose -f .circleci/docker-compose.yml run app runner << parameters.gem >> << parameters.command >>
+            docker-compose -f .circleci/docker-compose.yml run app runner << parameters.gem >> "<< parameters.command >>"
 
 workflows:
   version: 2
@@ -122,17 +122,17 @@ workflows:
       - test-job:
           name: activerecord-mysql2
           gem: activerecord
-          command: "rake db:mysql:build mysql2:test"
+          command: rake db:mysql:build mysql2:test
       - test-job:
           name: activerecord-postgresql
           gem: activerecord
-          command: "rake db:postgresql:build postgresql:test"
+          command: rake db:postgresql:build postgresql:test
       - test-job:
           name: activerecord-sqlite3
           gem: activerecord
-          command: "rake sqlite3:test"
+          command: rake sqlite3:test
       - test-job:
           name: activerecord-sqlite3_mem
           gem: activerecord
-          command: "rake sqlite3_mem:test"
+          command: rake sqlite3_mem:test
 
