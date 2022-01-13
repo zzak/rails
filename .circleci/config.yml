@@ -34,6 +34,12 @@ executors:
   base:
     docker:
       - image: cimg/ruby:3.1
+  services:
+    docker:
+      - image: cimg/ruby:3.1-browsers
+      - image: circleci/redis
+      - image: circleci/rabbitmq
+      - image: bitnami/memcached
   redis:
     docker:
       - image: cimg/ruby:3.1-browsers
@@ -104,7 +110,7 @@ workflows:
       - test-job:
           name: activesupport
           gem: activesupport
-          exe: redis
+          exe: services
       - test-job:
           name: guides
           gem: guides
