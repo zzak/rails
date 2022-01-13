@@ -41,10 +41,14 @@ jobs:
       ruby:
         type: string
         default: ruby:latest
+      nodes:
+        type: integer
+        default: 1
     machine:
       image: ubuntu-2004:202111-02
       docker_layer_caching: true
       resource_class: large
+    parallelism: << parameters.nodes >>
     environment:
       RUBY_IMAGE: << parameters.ruby >>
     steps:
@@ -122,13 +126,17 @@ workflows:
           name: activemodel
           gem: activemodel
       - test-job:
+          name: railties
+          gem: railties
+          nodes: 12
+      - test-job:
           name: activerecord-mysql2
           gem: activerecord
-          command: rake db:mysql:build mysql2:test
+          command: rake db:mysql:rebuild mysql2:test
       - test-job:
           name: activerecord-postgresql
           gem: activerecord
-          command: rake db:postgresql:build postgresql:test
+          command: rake db:postgresql:rebuild postgresql:test
       - test-job:
           name: activerecord-sqlite3
           gem: activerecord

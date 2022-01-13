@@ -12,6 +12,10 @@ services:
     command: ruby -v
     environment:
       CI:
+      CIRCLECI:
+      CIRCLE_NODE_TOTAL:
+      CIRCLE_NODE_INDEX:
+
       MEMCACHE_SERVERS: "memcached:11211"
       MYSQL_HOST: mysql
       PGHOST: postgres
