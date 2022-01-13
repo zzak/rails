@@ -37,7 +37,7 @@ jobs:
         type: string
       command:
         type: string
-        default: bundle exec rake test
+        default: rake test
     docker:
       - image: docker:17.05.0-ce-git
     working_directory: /app
@@ -105,7 +105,6 @@ workflows:
       - test-job:
           name: actioncable
           gem: actioncable
-          exe: redis
       #- actioncable-integration
       - test-job:
           name: actionmailbox
@@ -128,7 +127,6 @@ workflows:
       - test-job:
           name: activesupport
           gem: activesupport
-          exe: services
       - test-job:
           name: guides
           gem: guides
@@ -141,21 +139,17 @@ workflows:
       - test-job:
           name: activerecord-mysql2
           gem: activerecord
-          exe: dbs
-          command: bundle exec rake db:mysql:build mysql2:test
+          command: rake db:mysql:build mysql2:test
       - test-job:
           name: activerecord-postgresql
           gem: activerecord
-          exe: dbs
-          command: bundle exec rake db:postgresql:build postgresql:test
+          command: rake db:postgresql:build postgresql:test
       - test-job:
           name: activerecord-sqlite3
           gem: activerecord
-          exe: dbs
-          command: bundle exec rake sqlite3:test
+          command: rake sqlite3:test
       - test-job:
           name: activerecord-sqlite3_mem
           gem: activerecord-sqlite3_mem
-          exe: dbs
-          command: bundle exec rake sqlite3_mem:test
+          command: rake sqlite3_mem:test
 
