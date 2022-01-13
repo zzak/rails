@@ -33,10 +33,10 @@ orbs:
 executors:
   base:
     docker:
-      - image: cimg/ruby:3.1
+      - image: docker:17.05.0-ce-git
   dbs:
     docker:
-      - image: cimg/ruby:3.1-browsers
+      - image: docker:17.05.0-ce-git
       - image: postgres:alpine
         environment:
           - POSTGRES_HOST_AUTH_METHOD: "trust"
@@ -46,13 +46,13 @@ executors:
           - MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
   services:
     docker:
-      - image: cimg/ruby:3.1-browsers
+      - image: docker:17.05.0-ce-git
       - image: redis:alpine
       - image: rabbitmq:alpine
       - image: memcached:alpine
   redis:
     docker:
-      - image: cimg/ruby:3.1-browsers
+      - image: docker:17.05.0-ce-git
       - image: redis:alpine
 
 jobs:
@@ -67,14 +67,46 @@ jobs:
         type: string
         default: bundle exec rake test
     executor: << parameters.exe >>
+    working_directory: /app
     steps:
       - checkout
+      - setup_remote_docker
       - run:
-          name: Bundle install
-          command: rm Gemfile.lock && bundle install
+          name: Install dependencies
+          command: |
+            apk add --no-cache \
+              py-pip=9.0.0-r1
+            pip install \
+              docker-compose==1.12.0
+      - restore_cache:
+          keys:
+            - v1-{{ .Branch }}
+          paths:
+            - /caches/app.tar
       - run:
-          name: Test
-          command: cd << parameters.gem >> && << parameters.command >>
+          name: Load Docker image layer cache
+          command: |
+            set +o pipefail
+            docker load -i /caches/app.tar | true
+      - run:
+          name: Build application Docker image
+          command: |
+            docker build --cache-from=app -t app .circleci/.
+      - run:
+          name: Save Docker image layer cache
+          command: |
+            mkdir -p /caches
+            docker save -o /caches/app.tar app
+      - save_cache:
+          key: v1-{{ .Branch }}-{{ epoch }}
+          paths:
+            - /caches/app.tar
+      - run:
+          name: Run tests
+          command: |
+            docker-compose -f .circleci/docker-compose.yml run bash -c \
+              "rm Gemfile.lock && bundle install && \
+              cd << parameters.gem >> && << parameters.command >>"
 
   actioncable-integration:
     docker:
