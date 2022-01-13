@@ -34,16 +34,26 @@ executors:
   base:
     docker:
       - image: cimg/ruby:3.1
+  dbs:
+    docker:
+      - image: cimg/ruby:3.1-browsers
+      - image: postgres:alpine
+        environment:
+          - POSTGRES_HOST_AUTH_METHOD: "trust"
+      - image: mysql:latest
+        command: "--default-authentication-plugin=mysql_native_password"
+        environment:
+          - MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
   services:
     docker:
       - image: cimg/ruby:3.1-browsers
-      - image: circleci/redis
-      #- image: bitnami/rabbitmq
-      - image: bitnami/memcached
+      - image: redis:alpine
+      - image: rabbitmq:alpine
+      - image: memcached:alpine
   redis:
     docker:
       - image: cimg/ruby:3.1-browsers
-      - image: circleci/redis
+      - image: redis:alpine
 
 jobs:
   test-job:
@@ -53,6 +63,9 @@ jobs:
       exe:
         type: executor
         default: base
+      command:
+        type: string
+        default: bundle exec rake test
     executor: << parameters.exe >>
     steps:
       - checkout
@@ -61,7 +74,7 @@ jobs:
           command: rm Gemfile.lock && bundle install
       - run:
           name: Test
-          command: cd << parameters.gem >> && bundle exec rake test
+          command: cd << parameters.gem >> && << parameters.command >>
 
   actioncable-integration:
     docker:
@@ -117,6 +130,27 @@ workflows:
       - test-job:
           name: activejob
           gem: activejob
-
-
+      - test-job:
+          name: activemodel
+          gem: activemodel
+      - test-job:
+          name: activerecord-mysql2
+          gem: activerecord
+          exe: dbs
+          command: bundle exec rake db:mysql:build mysql2:test
+      - test-job:
+          name: activerecord-postgresql
+          gem: activerecord
+          exe: dbs
+          command: bundle exec rake db:postgresql:build postgresql:test
+      - test-job:
+          name: activerecord-sqlite3
+          gem: activerecord
+          exe: dbs
+          command: bundle exec rake sqlite3:test
+      - test-job:
+          name: activerecord-sqlite3_mem
+          gem: activerecord-sqlite3_mem
+          exe: dbs
+          command: bundle exec rake sqlite3_mem:test
 
