@@ -150,6 +150,6 @@ workflows:
           command: rake sqlite3:test
       - test-job:
           name: activerecord-sqlite3_mem
-          gem: activerecord-sqlite3_mem
+          gem: activerecord
           command: rake sqlite3_mem:test
 
