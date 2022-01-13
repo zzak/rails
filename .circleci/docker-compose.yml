@@ -51,7 +51,7 @@ services:
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     volumes:
-      - ".circleci/mysql-initdb.d:/docker-entrypoint-initdb.d"
+      - "./mysql-initdb.d:/docker-entrypoint-initdb.d"
 
   postgres:
     image: "${POSTGRES_IMAGE-postgres:alpine}"
