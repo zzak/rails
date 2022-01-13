@@ -48,9 +48,11 @@ jobs:
       RUBY_IMAGE: << parameters.ruby >>
     steps:
       - checkout
-      - run: |
-        mkdir /caches
-        chown -R $USER:$USER /caches
+      - run:
+          name: Make cache directory
+          command: |
+            mkdir /caches
+            chown -R $USER:$USER /caches
       - restore_cache:
           keys:
             - v1-<< parameters.ruby >>-{{ .Branch }}
