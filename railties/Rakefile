@@ -77,9 +77,9 @@ namespace :test do
       !file.start_with?("test/fixtures/") && !file.start_with?("test/isolation/assets/")
     end
 
-    if ENV["BUILDKITE_PARALLEL_JOB_COUNT"]
-      n = ENV["BUILDKITE_PARALLEL_JOB"].to_i
-      m = ENV["BUILDKITE_PARALLEL_JOB_COUNT"].to_i
+    if ENV["BUILDKITE_PARALLEL_JOB_COUNT"] || (ENV["CIRCLE_NODE_TOTAL"] > 1)
+      n = (ENV["BUILDKITE_PARALLEL_JOB"] || ENV["CIRCLE_NODE_INDEX"]).to_i
+      m = (ENV["BUILDKITE_PARALLEL_JOB_COUNT"] || ENV["CIRCLE_NODE_TOTAL"]).to_i
 
       buckets = Array.new(m) { [] }
       allocations = Array.new(m) { 0 }
