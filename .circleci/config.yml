@@ -30,43 +30,16 @@ version: 2.1
 orbs:
   browser-tools: circleci/browser-tools@1.2.3
 
-executors:
-  base:
-    docker:
-      - image: docker:17.05.0-ce-git
-  dbs:
-    docker:
-      - image: docker:17.05.0-ce-git
-      - image: postgres:alpine
-        environment:
-          - POSTGRES_HOST_AUTH_METHOD: "trust"
-      - image: mysql:latest
-        command: "--default-authentication-plugin=mysql_native_password"
-        environment:
-          - MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-  services:
-    docker:
-      - image: docker:17.05.0-ce-git
-      - image: redis:alpine
-      - image: rabbitmq:alpine
-      - image: memcached:alpine
-  redis:
-    docker:
-      - image: docker:17.05.0-ce-git
-      - image: redis:alpine
-
 jobs:
   test-job:
     parameters:
       gem:
         type: string
-      exe:
-        type: executor
-        default: base
       command:
         type: string
         default: bundle exec rake test
-    executor: << parameters.exe >>
+    docker:
+      - image: docker:17.05.0-ce-git
     working_directory: /app
     steps:
       - checkout
@@ -106,9 +79,7 @@ jobs:
           name: Run tests
           command: |
             export COMPOSE_TLS_VERSION=TLSv1_2 && \
-            docker-compose -f .circleci/docker-compose.yml run app bash -c \
-              "rm Gemfile.lock && bundle install && \
-              cd << parameters.gem >> && << parameters.command >>"
+            docker-compose -f .circleci/docker-compose.yml run app runner << parameters.gem >> << parameters.command >>
 
   actioncable-integration:
     docker:

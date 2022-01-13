@@ -4,5 +4,67 @@ services:
     build:
       context: ../
       dockerfile: .circleci/Dockerfile
+      args:
+        - RUBY_IMAGE
+        - BUNDLER
+        - RUBYGEMS
     image: app
     command: ruby -v
+    environment:
+      CI:
+      MEMCACHE_SERVERS: "memcached:11211"
+      MYSQL_HOST: mysql
+      PGHOST: postgres
+      PGUSER: postgres
+      QC_DATABASE_URL: "postgres://postgres@postgres/active_jobs_qc_int_test"
+      QUE_DATABASE_URL: "postgres://postgres@postgres/active_jobs_que_int_test"
+      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672"
+      REDIS_URL: "redis://redis:6379/1"
+      SELENIUM_DRIVER_URL: "http://chrome:4444/wd/hub"
+
+      AWAIT_redis: tcp://redis:6379
+      AWAIT_memcached: tcp://memcached:11211
+      AWAIT_mysql: tcp://mysql:3306
+      AWAIT_postgres: postgres://postgres@postgres:5432/postgres
+      AWAIT_rabbitmq: tcp://rabbitmq:5672
+      AWAIT_chrome: tcp://chrome:4444
+    entrypoint: await-all
+    depends_on:
+      - redis
+      - memcached
+      - mysql
+      - postgres
+      - rabbitmq
+      - chrome
+    tmpfs:
+      - /rails/tmp:size=1G,exec
+
+  memcached:
+    image: memcached:alpine
+
+  redis:
+    image: redis:alpine
+
+  mysql:
+    image: "${MYSQL_IMAGE-mysql:latest}"
+    command: "--default-authentication-plugin=mysql_native_password"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - "./mysql-initdb.d:/docker-entrypoint-initdb.d"
+
+  postgres:
+    image: "${POSTGRES_IMAGE-postgres:alpine}"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+
+  rabbitmq:
+    image: rabbitmq:alpine
+
+  beanstalkd:
+    build:
+      context: ./
+      dockerfile: Dockerfile.beanstalkd
+
+  chrome:
+    image: selenium/standalone-chrome:latest
