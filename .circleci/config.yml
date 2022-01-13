@@ -61,7 +61,7 @@ jobs:
           command: rm Gemfile.lock && bundle install
       - run:
           name: Test
-          command: cd << parameters.gem >> && bin/test
+          command: cd << parameters.gem >> && rake test
 
   actioncable-integration:
     docker:
