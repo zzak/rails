@@ -51,8 +51,8 @@ jobs:
       - run:
           name: Make cache directory
           command: |
-            mkdir /caches
-            chown -R $USER:$USER /caches
+            sudo mkdir /caches
+            sudo chown -R $USER:$USER /caches
       - restore_cache:
           keys:
             - v1-<< parameters.ruby >>-{{ .Branch }}
