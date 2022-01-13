@@ -38,7 +38,7 @@ executors:
     docker:
       - image: cimg/ruby:3.1-browsers
       - image: circleci/redis
-      - image: circleci/rabbitmq
+      #- image: bitnami/rabbitmq
       - image: bitnami/memcached
   redis:
     docker:
