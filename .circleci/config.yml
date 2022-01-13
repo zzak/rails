@@ -38,23 +38,20 @@ jobs:
       command:
         type: string
         default: rake test
-    docker:
-      - image: docker:17.05.0-ce-git
+      ruby:
+        type: string
+        default: ruby:latest
+    machine:
+      image: ubuntu-2004:202111-02
+      docker_layer_caching: true
     working_directory: /app
+    environment:
+      RUBY_IMAGE: << parameters.ruby >>
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 19.03.13
-      - run:
-          name: Install dependencies
-          command: |
-            apk add --no-cache \
-              py-pip=9.0.0-r1
-            pip install \
-              docker-compose==1.12.0
       - restore_cache:
           keys:
-            - v1-{{ .Branch }}
+            - v1-<< parameters.ruby >>-{{ .Branch }}
           paths:
             - /caches/app.tar
       - run:
@@ -65,14 +62,14 @@ jobs:
       - run:
           name: Build application Docker image
           command: |
-            docker build --cache-from=app -t app -f .circleci/Dockerfile .
+            docker build --cache-from=app --build-arg RUBY_IMAGE=$RUBY_IMAGE -t app -f .circleci/Dockerfile .
       - run:
           name: Save Docker image layer cache
           command: |
             mkdir -p /caches
             docker save -o /caches/app.tar app
       - save_cache:
-          key: v1-{{ .Branch }}-{{ epoch }}
+          key: v1-<< parameters.ruby >>-{{ .Branch }}-{{ epoch }}
           paths:
             - /caches/app.tar
       - run:
