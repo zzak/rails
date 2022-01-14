@@ -106,11 +106,11 @@ RUN chmod +x /usr/local/bin/await-all /usr/local/bin/runner
 
 ## Wildcard ignores missing files; .empty ensures ADD always has at least
 ## one valid source: https://stackoverflow.com/a/46801962
-#ADD .buildkite/.empty actioncable/package.jso[n] actioncable/
-#ADD .buildkite/.empty actiontext/package.jso[n] actiontext/
-#ADD .buildkite/.empty actionview/package.jso[n] actionview/
-#ADD .buildkite/.empty activestorage/package.jso[n] activestorage/
-#ADD .buildkite/.empty package.jso[n] yarn.loc[k] .yarnr[c] ./
+ADD .circleci/.empty actioncable/package.jso[n] actioncable/
+ADD .circleci/.empty actiontext/package.jso[n] actiontext/
+ADD .circleci/.empty actionview/package.jso[n] actionview/
+ADD .circleci/.empty activestorage/package.jso[n] activestorage/
+ADD .circleci/.empty package.jso[n] yarn.loc[k] .yarnr[c] ./
 
 RUN if [ -f package.json ]; then \
         echo "--- :javascript: Installing JavaScript deps" \
@@ -122,10 +122,12 @@ RUN if [ -f package.json ]; then \
     fi
 
 ADD */*.gemspec tmp/
-#ADD .buildkite/.empty railties/exe/* railties/exe/
+ADD .circleci/.empty railties/exe/* railties/exe/
 ADD Gemfile Gemfile.lock RAILS_VERSION rails.gemspec ./
 
-RUN echo "--- :bundler: Installing Ruby deps" \
+RUN rm -f railties/exe/.empty \
+    && find railties/exe -maxdepth 0 -type d -empty -exec rmdir '{}' '+' \
+    echo "--- :bundler: Installing Ruby deps" \
     && (cd tmp && for f in *.gemspec; do d="$(basename -s.gemspec "$f")"; mkdir -p "../$d" && mv "$f" "../$d/"; done) \
     && rm Gemfile.lock && bundle install -j 8 && cp Gemfile.lock tmp/Gemfile.lock.updated \
     && rm -rf /usr/local/bundle/cache \
