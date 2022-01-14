@@ -29,7 +29,6 @@ version: 2.1
 
 orbs:
   browser-tools: circleci/browser-tools@1.2.3
-  retry: kimh/run-with-retry@1.0.0
 
 commands:
   run-tests:
@@ -40,8 +39,10 @@ commands:
         type: string
         default: rake test
     steps:
-      - retry/run-with-retry:
+      - run:
+          name: Run tests
           command: |
+            .circleci/with-retry.sh \
             env COMPOSE_TLS_VERSION=TLSv1_2 \
             docker-compose -f .circleci/docker-compose.yml run app runner << parameters.gem >> "<< parameters.command >>"
 
