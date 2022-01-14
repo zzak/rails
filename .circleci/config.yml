@@ -55,7 +55,8 @@ jobs:
         default: rake test
       ruby:
         type: string
-        default: ruby:latest
+      mysql:
+        type: string
       nodes:
         type: integer
         default: 1
@@ -66,6 +67,7 @@ jobs:
     parallelism: << parameters.nodes >>
     environment:
       RUBY_IMAGE: << parameters.ruby >>
+      MYSQL_IMAGE: << parameters.mysql >>
     steps:
       - checkout
       - run:
@@ -86,7 +88,7 @@ jobs:
       - run:
           name: Build application Docker image
           command: |
-            docker build --cache-from=app --build-arg RUBY_IMAGE=$RUBY_IMAGE -t app -f .circleci/Dockerfile .
+            docker build --cache-from=app --build-arg MYSQL_IMAGE=$MYSQL_IMAGE --build-arg RUBY_IMAGE=$RUBY_IMAGE -t app -f .circleci/Dockerfile .
       - run:
           name: Save Docker image layer cache
           command: |
@@ -146,6 +148,11 @@ workflows:
           name: activerecord-mysql2
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:test
+      - test-job:
+          name: activrecord-mysql2-mariadb
+          gem: activerecord
+          command: rake db:mysql:rebuild mysql2:test
+          mysql: mariadb:latest
       - test-job:
           name: activerecord-postgresql
           gem: activerecord
