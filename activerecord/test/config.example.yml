@@ -40,7 +40,7 @@ connections:
       username: rails
       encoding: utf8mb4
       collation: utf8mb4_unicode_ci
-<% if ENV['MYSQL_PREPARED_STATEMENTS'] %>
+<% if ENV['MYSQL_PREPARED_STATEMENTS'] and ENV['MYSQL_PREPARED_STATEMENTS'] == "true" %>
       prepared_statements: true
 <% else %>
       prepared_statements: false
