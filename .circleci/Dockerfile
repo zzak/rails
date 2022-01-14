@@ -112,7 +112,9 @@ ADD .circleci/.empty actionview/package.jso[n] actionview/
 ADD .circleci/.empty activestorage/package.jso[n] activestorage/
 ADD .circleci/.empty package.jso[n] yarn.loc[k] .yarnr[c] ./
 
-RUN if [ -f package.json ]; then \
+RUN rm -f .empty */.empty \
+    && find . -maxdepth 1 -type d -empty -exec rmdir '{}' '+' \
+    && if [ -f package.json ]; then \
         echo "--- :javascript: Installing JavaScript deps" \
         && yarn install \
         && yarn cache clean; \
@@ -127,7 +129,7 @@ ADD Gemfile Gemfile.lock RAILS_VERSION rails.gemspec ./
 
 RUN rm -f railties/exe/.empty \
     && find railties/exe -maxdepth 0 -type d -empty -exec rmdir '{}' '+' \
-    echo "--- :bundler: Installing Ruby deps" \
+    && echo "--- :bundler: Installing Ruby deps" \
     && (cd tmp && for f in *.gemspec; do d="$(basename -s.gemspec "$f")"; mkdir -p "../$d" && mv "$f" "../$d/"; done) \
     && rm Gemfile.lock && bundle install -j 8 && cp Gemfile.lock tmp/Gemfile.lock.updated \
     && rm -rf /usr/local/bundle/cache \
