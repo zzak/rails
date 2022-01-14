@@ -6,24 +6,13 @@
 # rails:
 #   - actioncable
 #     - integration
-#   - actionmailbox
-#   - actionmailer
-#   - actionpack
-#   - actiontext
-#   - actionview
-#     - ujs
-#   - activemodel
-#   - activerecord
+#   - activejob
+#     - integration
+#   - activerecord-isolated
 #     - mysql2
 #     - postgresql
 #     - sqlite3
 #     - sqlite3_mem
-#   - activestorage
-#   - activesupport
-#   - guides
-#   - railties
-#   - activejob
-#     - integration
 
 version: 2.1
 
@@ -180,4 +169,27 @@ workflows:
           name: activerecord-sqlite3_mem
           gem: activerecord
           command: rake sqlite3_mem:test
-
+      - test-job:
+          name: actionmailer-isolated
+          gem: actionmailer
+          command: rake test:isolated
+      - test-job:
+          name: actionpack-isolated
+          gem: actionpack
+          command: rake test:isolated
+      - test-job:
+          name: actionview-isolated
+          gem: actionview
+          command: rake test:isolated
+      - test-job:
+          name: activejob-isolated
+          gem: activejob
+          command: rake test:isolated
+      - test-job:
+          name: activemodel-isolated
+          gem: activemodel
+          command: rake test:isoalted
+      - test-job:
+          name: activesupport-isolated
+          gem: activesupport
+          command: rake test:isolated
