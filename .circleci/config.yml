@@ -30,6 +30,27 @@ version: 2.1
 orbs:
   browser-tools: circleci/browser-tools@1.2.3
 
+test-runner: &test-runner
+  name: Run tests
+  command: |
+    export COMPOSE_TLS_VERSION=TLSv1_2 && \
+    docker-compose -f .circleci/docker-compose.yml run app runner << parameters.gem >> "<< parameters.command >>"
+
+commands:
+  run-tests-with-retry:
+    parameters:
+      gem:
+        type: string
+      command:
+        type: string
+        default: rake test
+    steps:
+      - run:
+          <<: *test-runner
+      - run:
+          <<: *test-runner
+          when: on_fail
+
 jobs:
   test-job:
     parameters:
@@ -81,11 +102,9 @@ jobs:
           key: v1-<< parameters.ruby >>-{{ .Branch }}-{{ epoch }}
           paths:
             - /caches/app.tar
-      - run:
-          name: Run tests
-          command: |
-            export COMPOSE_TLS_VERSION=TLSv1_2 && \
-            docker-compose -f .circleci/docker-compose.yml run app runner << parameters.gem >> "<< parameters.command >>"
+      - run-tests-with-retry:
+          gem: << parameters.gem >>
+          command: << parameters.command >>
 
 workflows:
   version: 2
