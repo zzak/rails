@@ -57,6 +57,8 @@ jobs:
         type: string
       mysql:
         type: string
+      mysql_prepared_statements:
+        type: boolean
       nodes:
         type: integer
         default: 1
@@ -68,6 +70,7 @@ jobs:
     environment:
       RUBY_IMAGE: << parameters.ruby >>
       MYSQL_IMAGE: << parameters.mysql >>
+      MYSQL_PREPARED_STATEMENTS: << parameters.mysql_prepared_statements >>
     steps:
       - checkout
       - run:
@@ -153,6 +156,11 @@ workflows:
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:test
           mysql: mariadb:latest
+      - test-job:
+          name: activrecord-mysql2-mariadb
+          gem: activerecord
+          command: rake db:mysql:rebuild mysql2:test
+          mysql_prepared_statements: true
       - test-job:
           name: activerecord-postgresql
           gem: activerecord
