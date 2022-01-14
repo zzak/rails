@@ -132,6 +132,10 @@ workflows:
           name: actionview
           gem: actionview
       - test-job:
+          name: actionview-ujs
+          gem: actionview
+          command: rake test:ujs
+      - test-job:
           name: activestorage
           gem: activestorage
       - test-job:
