@@ -188,7 +188,7 @@ workflows:
       - test-job:
           name: activemodel-isolated
           gem: activemodel
-          command: rake test:isoalted
+          command: rake test:isolated
       - test-job:
           name: activesupport-isolated
           gem: activesupport
