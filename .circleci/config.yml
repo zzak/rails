@@ -160,7 +160,7 @@ workflows:
           command: rake db:mysql:rebuild mysql2:test
           mysql: mariadb:latest
       - test-job:
-          name: activrecord-mysql2-mariadb
+          name: activrecord-mysql2-prepared-statements
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:test
           mysql_prepared_statements: true
