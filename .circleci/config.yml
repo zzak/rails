@@ -55,10 +55,13 @@ jobs:
         default: rake test
       ruby:
         type: string
+        default: ruby:latest
       mysql:
         type: string
+        default: mysql:latest
       mysql_prepared_statements:
         type: boolean
+        default: false
       nodes:
         type: integer
         default: 1
