@@ -15,6 +15,7 @@ services:
       CIRCLECI:
       CIRCLE_NODE_TOTAL:
       CIRCLE_NODE_INDEX:
+      CIRCLE_BUILD_NUM:
 
       MEMCACHE_SERVERS: "memcached:11211"
       MYSQL_HOST: mysql
@@ -42,6 +43,8 @@ services:
       - chrome
     tmpfs:
       - /rails/tmp:size=1G,exec
+    volumes:
+      - ../test-reports:/rails/test-reports
 
   memcached:
     image: memcached:alpine

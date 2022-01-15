@@ -3,5 +3,6 @@
 if ENV["BUILDKITE"]
   require "minitest-ci"
 
-  Minitest::Ci.report_dir = File.join(__dir__, "../test-reports/#{ENV['BUILDKITE_JOB_ID']}")
+  job_id = ENV['BUILDKITE_JOB_ID'] || ENV['CIRCLE_BUILD_NUM']
+  Minitest::Ci.report_dir = File.join(__dir__, "../test-reports/#{job_id}")
 end

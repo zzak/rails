@@ -96,6 +96,8 @@ jobs:
       - run-tests:
           gem: << parameters.gem >>
           command: << parameters.command >>
+      - store_test_results:
+          path: test-reports
 
 workflows:
   version: 2
