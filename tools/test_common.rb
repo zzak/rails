@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-if ENV["BUILDKITE"]
+if ENV["BUILDKITE"] || ENV["CIRCLECI"]
   require "minitest-ci"
 
   job_id = ENV['BUILDKITE_JOB_ID'] || ENV['CIRCLE_BUILD_NUM']
