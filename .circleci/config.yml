@@ -106,105 +106,186 @@ workflows:
           gem: actioncable
       #- actioncable-integration
       - test-job:
-          name: actionmailbox
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: actionmailbox-<< matrix.ruby >>
           gem: actionmailbox
       - test-job:
-          name: actionmailer
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: actionmailer-<< matrix.ruby >>
           gem: actionmailer
       - test-job:
-          name: actionpack
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: actionpack-<< matrix.ruby >>
           gem: actionpack
       - test-job:
-          name: actiontext
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: actiontext-<< matrix.ruby >>
           gem: actiontext
       - test-job:
-          name: actionview
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: actionview-<< matrix.ruby >>
           gem: actionview
       - test-job:
-          name: actionview-ujs
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: actionview-ujs-<< matrix.ruby >>
           gem: actionview
           command: rake test:ujs
       - test-job:
-          name: activestorage
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: activestorage-<< matrix.ruby >>
           gem: activestorage
       - test-job:
-          name: activesupport
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: activesupport-<< matrix.ruby >>
           gem: activesupport
       - test-job:
-          name: guides
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: guides-<< matrix.ruby >>
           gem: guides
       - test-job:
-          name: activejob
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: activejob-<< matrix.ruby >>
           gem: activejob
       - test-job:
-          name: activemodel
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: activemodel-<< matrix.ruby >>
           gem: activemodel
       - test-job:
-          name: railties
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: railties-<< matrix.ruby >>
           gem: railties
           nodes: 12
       - test-job:
-          name: activerecord-mysql2
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: activerecord-mysql2-<< matrix.ruby >>
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:test
       - test-job:
-          name: activrecord-mysql2-mariadb
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: activrecord-mysql2-mariadb-<< matrix.ruby >>
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:test
           mysql: mariadb:latest
       - test-job:
-          name: activrecord-mysql2-prepared-statements
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: activrecord-mysql2-prepared-statements-<< matrix.ruby >>
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:test
           mysql_prepared_statements: true
       - test-job:
-          name: activerecord-postgresql
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: activerecord-postgresql-<< matrix.ruby >>
           gem: activerecord
           command: rake db:postgresql:rebuild postgresql:test
       - test-job:
-          name: activerecord-sqlite3
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: activerecord-sqlite3-<< matrix.ruby >>
           gem: activerecord
           command: rake sqlite3:test
       - test-job:
-          name: activerecord-sqlite3_mem
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: activerecord-sqlite3_mem-<< matrix.ruby >>
           gem: activerecord
           command: rake sqlite3_mem:test
       - test-job:
-          name: activrecord-mysql2-isolated
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: activrecord-mysql2-isolated-<< matrix.ruby >>
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:isolated_test
           nodes: 5
       - test-job:
-          name: activerecord-postgresql-isolated
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: activerecord-postgresql-isolated-<< matrix.ruby >>
           gem: activerecord
           command: rake db:postgresql:rebuild postgresql:isolated_test
           nodes: 5
       - test-job:
-          name: activerecord-sqlite3-isolated
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: activerecord-sqlite3-isolated-<< matrix.ruby >>
           gem: activerecord
           command: rake sqlite3:isolated_test
           nodes: 5
       - test-job:
-          name: actionmailer-isolated
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: actionmailer-isolated-<< matrix.ruby >>
           gem: actionmailer
           command: rake test:isolated
       - test-job:
-          name: actionpack-isolated
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: actionpack-isolated-<< matrix.ruby >>
           gem: actionpack
           command: rake test:isolated
       - test-job:
-          name: actionview-isolated
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: actionview-isolated-<< matrix.ruby >>
           gem: actionview
           command: rake test:isolated
       - test-job:
-          name: activejob-isolated
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: activejob-isolated-<< matrix.ruby >>
           gem: activejob
           command: rake test:isolated
       - test-job:
-          name: activemodel-isolated
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: activemodel-isolated-<< matrix.ruby >>
           gem: activemodel
           command: rake test:isolated
       - test-job:
-          name: activesupport-isolated
+          matrix:
+            parameters:
+              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+          name: activesupport-isolated-<< matrix.ruby >>
           gem: activesupport
           command: rake test:isolated
