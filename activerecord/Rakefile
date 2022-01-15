@@ -116,9 +116,10 @@ end
           |x| x.include?("/adapters/") || x.include?("/encryption/performance")
         } + Dir["test/cases/adapters/#{adapter_short}/**/*_test.rb"]).sort
 
-        if ENV["BUILDKITE_PARALLEL_JOB_COUNT"]
-          n = ENV["BUILDKITE_PARALLEL_JOB"].to_i
-          m = ENV["BUILDKITE_PARALLEL_JOB_COUNT"].to_i
+
+        if ENV["BUILDKITE_PARALLEL_JOB_COUNT"] || (ENV["CIRCLE_NODE_TOTAL"].to_i > 1)
+          n = (ENV["BUILDKITE_PARALLEL_JOB"] || ENV["CIRCLE_NODE_INDEX"]).to_i
+          m = (ENV["BUILDKITE_PARALLEL_JOB_COUNT"] || ENV["CIRCLE_NODE_TOTAL"]).to_i
 
           test_files = test_files.each_slice(m).filter_map { |slice| slice[n] }
         end

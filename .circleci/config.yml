@@ -170,6 +170,21 @@ workflows:
           gem: activerecord
           command: rake sqlite3_mem:test
       - test-job:
+          name: activrecord-mysql2-isolated
+          gem: activerecord
+          command: rake db:mysql:rebuild mysql2:isolated_test
+          nodes: 5
+      - test-job:
+          name: activerecord-postgresql-isolated
+          gem: activerecord
+          command: rake db:postgresql:rebuild postgresql:isolated_test
+          nodes: 5
+      - test-job:
+          name: activerecord-sqlite3-isolated
+          gem: activerecord
+          command: rake sqlite3:isolated_test
+          nodes: 5
+      - test-job:
           name: actionmailer-isolated
           gem: actionmailer
           command: rake test:isolated
