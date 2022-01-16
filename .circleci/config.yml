@@ -53,7 +53,7 @@ jobs:
 
             docker build \
               --cache-from=$CACHE_IMAGE:$DOCKER_TAG \
-              --tag=$DOCKER_TAG \
+              --tag=$CACHE_IMAGE:$DOCKER_TAG \
               --build-arg BUILDKIT_INLINE_CACHE=1 \
               --build-arg RUBY_IMAGE=$RUBY_IMAGE \
               -f .circleci/Dockerfile .
