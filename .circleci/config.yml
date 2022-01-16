@@ -40,7 +40,6 @@ jobs:
     environment:
       CACHE_IMAGE: zzak/rails-ci
       DOCKER_BUILDKIT: 1
-      DOCKER_TAG: v1-ruby-<< parameters.ruby >>-$CIRCLE_BRANCH
       RUBY_IMAGE: ruby:<< parameters.ruby >>
     steps:
       - checkout
@@ -50,6 +49,8 @@ jobs:
       - run:
           name: Build application Docker image
           command: |
+            export DOCKER_TAG=v1-ruby-<< parameters.ruby >>-$CIRCLE_BRANCH
+
             docker build \
               --cache-from=$CACHE_IMAGE:$DOCKER_TAG \
               --tag=$DOCKER_TAG \
@@ -58,7 +59,9 @@ jobs:
               -f .circleci/Dockerfile .
       - run:
           name: Push to docker hub
-          command: docker push $CACHE_IMAGE:$DOCKER_TAG
+          command: |
+            export DOCKER_TAG=v1-ruby-<< parameters.ruby >>-$CIRCLE_BRANCH
+            docker push $CACHE_IMAGE:$DOCKER_TAG
 
   test-job:
     parameters:
