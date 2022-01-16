@@ -49,7 +49,7 @@ jobs:
       - run:
           name: Build application Docker image
           command: |
-            export DOCKER_TAG=v1-ruby-<< parameters.ruby >>-$CIRCLE_BRANCH
+            export DOCKER_TAG=v1-ruby-<< parameters.ruby >>-dev
 
             docker build \
               --cache-from=$CACHE_IMAGE:$DOCKER_TAG \
@@ -60,7 +60,7 @@ jobs:
       - run:
           name: Push to docker hub
           command: |
-            export DOCKER_TAG=v1-ruby-<< parameters.ruby >>-$CIRCLE_BRANCH
+            export DOCKER_TAG=v1-ruby-<< parameters.ruby >>-dev
             docker push $CACHE_IMAGE:$DOCKER_TAG
 
   test-job:
@@ -83,7 +83,7 @@ jobs:
         type: integer
         default: 1
     docker:
-      - image: zzak/rails-ci:v1-ruby-<< parameters.ruby >>-{{ .Branch }}
+      - image: zzak/rails-ci:v1-ruby-<< parameters.ruby >>-dev
       - image: redis:alpine
       - image: << parameters.mysql >>
         command: "--default-authentication-plugin=mysql_native_password"
