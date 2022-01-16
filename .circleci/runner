@@ -6,6 +6,8 @@ dir="$1"
 cmd="$2"
 
 echo
+echo "--- bundle install vendor/bundle"
+bundle install --path vendor/bundle
 echo "--- bundle env"
 bundle env
 echo "+++  "

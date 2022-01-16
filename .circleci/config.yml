@@ -25,7 +25,9 @@ commands:
     steps:
       - run:
           name: Run tests
-          command: runner << parameters.gem >> "<< parameters.command >>"
+          command: |
+            env COMPOSE_TLS_VERSION=TLSv1_2 \
+            docker-compose -f .circleci/docker-compose.yml run app runner << parameters.gem >> "<< parameters.command >>"
 
 jobs:
   build-image:
@@ -82,51 +84,33 @@ jobs:
       nodes:
         type: integer
         default: 1
-    docker:
-      - image: zzak/rails-ci:v1-ruby-<< parameters.ruby >>-dev
-      - image: redis:alpine
-      - image: << parameters.mysql >>
-        command: "--default-authentication-plugin=mysql_native_password"
-        environment:
-          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-        #volumes:
-          #- "./mysql-initdb.d:/docker-entrypoint-initdb.d"
-      - image: memcached:alpine
-      - image: postgres:alpine
-        environment:
-          POSTGRES_HOST_AUTH_METHOD: "trust"
-
-      - image: rabbitmq:alpine
-      - image: selenium/standalone-chrome:latest
-
-    resource_class: large
+    machine:
+      image: ubuntu-2004:202111-02
+      docker_layer_caching: true
+      resource_class: large
     parallelism: << parameters.nodes >>
     environment:
+      APP_IMAGE_TAG: zzak/rails-ci:v1-ruby-<< parameters.ruby >>-dev
+      RUBY_IMAGE: << parameters.ruby >>
+      MYSQL_IMAGE: << parameters.mysql >>
       MYSQL_PREPARED_STATEMENTS: << parameters.mysql_prepared_statements >>
-
-      MEMCACHE_SERVERS: "memcached:11211"
-      MYSQL_HOST: mysql
-      PGHOST: postgres
-      PGUSER: postgres
-      QC_DATABASE_URL: "postgres://postgres@postgres/active_jobs_qc_int_test"
-      QUE_DATABASE_URL: "postgres://postgres@postgres/active_jobs_que_int_test"
-      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672"
-      REDIS_URL: "redis://redis:6379/1"
-      SELENIUM_DRIVER_URL: "http://chrome:4444/wd/hub"
-
-      AWAIT_redis: tcp://redis:6379
-      AWAIT_memcached: tcp://memcached:11211
-      AWAIT_mysql: tcp://mysql:3306
-      AWAIT_postgres: postgres://postgres@postgres:5432/postgres
-      AWAIT_rabbitmq: tcp://rabbitmq:5672
-      AWAIT_chrome: tcp://chrome:4444
-
     steps:
       - checkout
-      - run: await-all
+      - run:
+          name: Pull build image
+          command: docker pull $APP_IMAGE_TAG
+      - restore_cache:
+          keys:
+            - gem-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
+            - gem-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}
+            - gem-cache-v1-ruby-<< parameters.ruby >>
       - run-tests:
           gem: << parameters.gem >>
           command: << parameters.command >>
+      - save_cache:
+          key: gem-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
+          paths:
+            - vendor/bundle
       - store_test_results:
           path: test-reports
       - store_artifacts:

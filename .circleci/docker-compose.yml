@@ -1,14 +1,7 @@
 version: '3'
 services:
   app:
-    build:
-      context: ../
-      dockerfile: .circleci/Dockerfile
-      args:
-        - RUBY_IMAGE
-        - BUNDLER
-        - RUBYGEMS
-    image: app
+    image: "${APP_IMAGE_TAG}"
     command: ruby -v
     environment:
       CI:
@@ -45,6 +38,7 @@ services:
       - /rails/tmp:size=1G,exec
     volumes:
       - ../test-reports:/rails/test-reports
+      - ../vendor/bundle:/rails/vendor/bundle
 
   memcached:
     image: memcached:alpine
