@@ -146,6 +146,8 @@ jobs:
       MYSQL_PREPARED_STATEMENTS: << parameters.mysql_prepared_statements >>
     steps:
       - checkout
+      - bundle-restore:
+          ruby: << parameters.ruby >>
       - run:
           name: Pull build image
           command: docker pull $APP_IMAGE_TAG
