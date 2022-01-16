@@ -30,6 +30,16 @@ commands:
             docker-compose -f .circleci/docker-compose.yml run app runner << parameters.gem >> "<< parameters.command >>"
 
 jobs:
+  parent:
+    parameters:
+      label:
+        type: string
+        default: default
+    docker:
+      - image: alpine
+    steps:
+      - run: echo "Matrix parent for << parameters.label >>"
+
   test-job:
     parameters:
       gem:
@@ -98,12 +108,18 @@ workflows:
   version: 2
   test:
     jobs:
+      - parent:
+         matrix:
+           parameters:
+             label: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
       - test-job:
           matrix:
             parameters:
               ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
           name: actioncable-<< matrix.ruby >>
           gem: actioncable
+          requires:
+            - parent-<< matrix.ruby >>
       #- actioncable-integration
       - test-job:
           matrix:
@@ -111,30 +127,40 @@ workflows:
               ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
           name: actionmailbox-<< matrix.ruby >>
           gem: actionmailbox
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
               ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
           name: actionmailer-<< matrix.ruby >>
           gem: actionmailer
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
               ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
           name: actionpack-<< matrix.ruby >>
           gem: actionpack
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
               ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
           name: actiontext-<< matrix.ruby >>
           gem: actiontext
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
               ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
           name: actionview-<< matrix.ruby >>
           gem: actionview
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -142,36 +168,48 @@ workflows:
           name: actionview-ujs-<< matrix.ruby >>
           gem: actionview
           command: rake test:ujs
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
               ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
           name: activestorage-<< matrix.ruby >>
           gem: activestorage
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
               ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
           name: activesupport-<< matrix.ruby >>
           gem: activesupport
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
               ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
           name: guides-<< matrix.ruby >>
           gem: guides
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
               ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
           name: activejob-<< matrix.ruby >>
           gem: activejob
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
               ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
           name: activemodel-<< matrix.ruby >>
           gem: activemodel
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -179,6 +217,8 @@ workflows:
           name: railties-<< matrix.ruby >>
           gem: railties
           nodes: 12
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -186,6 +226,8 @@ workflows:
           name: activerecord-mysql2-<< matrix.ruby >>
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:test
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -194,6 +236,8 @@ workflows:
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:test
           mysql: mariadb:latest
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -202,6 +246,8 @@ workflows:
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:test
           mysql_prepared_statements: true
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -209,6 +255,8 @@ workflows:
           name: activerecord-postgresql-<< matrix.ruby >>
           gem: activerecord
           command: rake db:postgresql:rebuild postgresql:test
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -216,6 +264,8 @@ workflows:
           name: activerecord-sqlite3-<< matrix.ruby >>
           gem: activerecord
           command: rake sqlite3:test
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -223,6 +273,8 @@ workflows:
           name: activerecord-sqlite3_mem-<< matrix.ruby >>
           gem: activerecord
           command: rake sqlite3_mem:test
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -231,6 +283,8 @@ workflows:
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:isolated_test
           nodes: 5
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -239,6 +293,8 @@ workflows:
           gem: activerecord
           command: rake db:postgresql:rebuild postgresql:isolated_test
           nodes: 5
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -247,6 +303,8 @@ workflows:
           gem: activerecord
           command: rake sqlite3:isolated_test
           nodes: 5
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -254,6 +312,8 @@ workflows:
           name: actionmailer-isolated-<< matrix.ruby >>
           gem: actionmailer
           command: rake test:isolated
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -261,6 +321,8 @@ workflows:
           name: actionpack-isolated-<< matrix.ruby >>
           gem: actionpack
           command: rake test:isolated
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -268,6 +330,8 @@ workflows:
           name: actionview-isolated-<< matrix.ruby >>
           gem: actionview
           command: rake test:isolated
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -275,6 +339,8 @@ workflows:
           name: activejob-isolated-<< matrix.ruby >>
           gem: activejob
           command: rake test:isolated
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -282,6 +348,8 @@ workflows:
           name: activemodel-isolated-<< matrix.ruby >>
           gem: activemodel
           command: rake test:isolated
+          requires:
+            - parent-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -289,3 +357,5 @@ workflows:
           name: activesupport-isolated-<< matrix.ruby >>
           gem: activesupport
           command: rake test:isolated
+          requires:
+            - parent-<< matrix.ruby >>
