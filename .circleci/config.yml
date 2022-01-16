@@ -92,7 +92,7 @@ jobs:
         #volumes:
           #- "./mysql-initdb.d:/docker-entrypoint-initdb.d"
       - image: memcached:alpine
-      - image: "${POSTGRES_IMAGE-postgres:alpine}"
+      - image: postgres:alpine
         environment:
           POSTGRES_HOST_AUTH_METHOD: "trust"
 
