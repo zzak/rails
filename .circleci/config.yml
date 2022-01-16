@@ -40,7 +40,7 @@ jobs:
     environment:
       CACHE_IMAGE: zzak/rails-ci
       DOCKER_BUILDKIT: 1
-      DOCKER_TAG: v1-ruby-<< parameters.ruby >>-{{ .Branch }}
+      DOCKER_TAG: v1-ruby-<< parameters.ruby >>-$CIRCLE_BRANCH
       RUBY_IMAGE: ruby:<< parameters.ruby >>
     steps:
       - checkout
