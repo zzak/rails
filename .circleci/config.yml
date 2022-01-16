@@ -49,7 +49,7 @@ jobs:
         default: rake test
       ruby:
         type: string
-        default: ruby:latest
+        default: latest
       mysql:
         type: string
         default: mysql:latest
@@ -65,7 +65,7 @@ jobs:
       resource_class: large
     parallelism: << parameters.nodes >>
     environment:
-      RUBY_IMAGE: << parameters.ruby >>
+      RUBY_IMAGE: ruby:<< parameters.ruby >>
       MYSQL_IMAGE: << parameters.mysql >>
       MYSQL_PREPARED_STATEMENTS: << parameters.mysql_prepared_statements >>
     steps:
@@ -77,7 +77,7 @@ jobs:
             sudo chown -R $USER:$USER /caches
       - restore_cache:
           keys:
-            - v1-<< parameters.ruby >>-{{ .Branch }}
+            - v1-ruby:<< parameters.ruby >>-{{ .Branch }}
           paths:
             - /caches/app.tar
       - run:
@@ -95,7 +95,7 @@ jobs:
             mkdir -p /caches
             docker save -o /caches/app.tar app
       - save_cache:
-          key: v1-<< parameters.ruby >>-{{ .Branch }}-{{ epoch }}
+          key: v1-ruby:<< parameters.ruby >>-{{ .Branch }}-{{ epoch }}
           paths:
             - /caches/app.tar
       - run-tests:
@@ -113,11 +113,11 @@ workflows:
       - parent:
          matrix:
            parameters:
-             label: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+             label: ["2.7", "3.0", "3.1", "latest"]
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: actioncable-<< matrix.ruby >>
           gem: actioncable
           requires:
@@ -126,7 +126,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: actionmailbox-<< matrix.ruby >>
           gem: actionmailbox
           requires:
@@ -134,7 +134,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: actionmailer-<< matrix.ruby >>
           gem: actionmailer
           requires:
@@ -142,7 +142,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: actionpack-<< matrix.ruby >>
           gem: actionpack
           requires:
@@ -150,7 +150,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: actiontext-<< matrix.ruby >>
           gem: actiontext
           requires:
@@ -158,7 +158,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: actionview-<< matrix.ruby >>
           gem: actionview
           requires:
@@ -166,7 +166,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: actionview-ujs-<< matrix.ruby >>
           gem: actionview
           command: rake test:ujs
@@ -175,7 +175,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: activestorage-<< matrix.ruby >>
           gem: activestorage
           requires:
@@ -183,7 +183,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: activesupport-<< matrix.ruby >>
           gem: activesupport
           requires:
@@ -191,7 +191,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: guides-<< matrix.ruby >>
           gem: guides
           requires:
@@ -199,7 +199,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: activejob-<< matrix.ruby >>
           gem: activejob
           requires:
@@ -207,7 +207,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: activemodel-<< matrix.ruby >>
           gem: activemodel
           requires:
@@ -215,7 +215,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: railties-<< matrix.ruby >>
           gem: railties
           nodes: 12
@@ -224,7 +224,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: activerecord-mysql2-<< matrix.ruby >>
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:test
@@ -233,7 +233,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: activrecord-mysql2-mariadb-<< matrix.ruby >>
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:test
@@ -243,7 +243,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: activrecord-mysql2-prepared-statements-<< matrix.ruby >>
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:test
@@ -253,7 +253,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: activerecord-postgresql-<< matrix.ruby >>
           gem: activerecord
           command: rake db:postgresql:rebuild postgresql:test
@@ -262,7 +262,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: activerecord-sqlite3-<< matrix.ruby >>
           gem: activerecord
           command: rake sqlite3:test
@@ -271,7 +271,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: activerecord-sqlite3_mem-<< matrix.ruby >>
           gem: activerecord
           command: rake sqlite3_mem:test
@@ -280,7 +280,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: activrecord-mysql2-isolated-<< matrix.ruby >>
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:isolated_test
@@ -290,7 +290,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: activerecord-postgresql-isolated-<< matrix.ruby >>
           gem: activerecord
           command: rake db:postgresql:rebuild postgresql:isolated_test
@@ -300,7 +300,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: activerecord-sqlite3-isolated-<< matrix.ruby >>
           gem: activerecord
           command: rake sqlite3:isolated_test
@@ -310,7 +310,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: actionmailer-isolated-<< matrix.ruby >>
           gem: actionmailer
           command: rake test:isolated
@@ -319,7 +319,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: actionpack-isolated-<< matrix.ruby >>
           gem: actionpack
           command: rake test:isolated
@@ -328,7 +328,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: actionview-isolated-<< matrix.ruby >>
           gem: actionview
           command: rake test:isolated
@@ -337,7 +337,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: activejob-isolated-<< matrix.ruby >>
           gem: activejob
           command: rake test:isolated
@@ -346,7 +346,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: activemodel-isolated-<< matrix.ruby >>
           gem: activemodel
           command: rake test:isolated
@@ -355,7 +355,7 @@ workflows:
       - test-job:
           matrix:
             parameters:
-              ruby: ["ruby:2.7", "ruby:3.0", "ruby:3.1", "ruby:latest"]
+              ruby: ["2.7", "3.0", "3.1", "latest"]
           name: activesupport-isolated-<< matrix.ruby >>
           gem: activesupport
           command: rake test:isolated
