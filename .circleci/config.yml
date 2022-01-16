@@ -25,20 +25,40 @@ commands:
     steps:
       - run:
           name: Run tests
-          command: |
-            env COMPOSE_TLS_VERSION=TLSv1_2 \
-            docker-compose -f .circleci/docker-compose.yml run app runner << parameters.gem >> "<< parameters.command >>"
+          command: runner << parameters.gem >> "<< parameters.command >>"
 
 jobs:
-  parent:
+  build-image:
     parameters:
-      label:
+      ruby:
         type: string
-        default: default
-    docker:
-      - image: alpine
+        default: latest
+    machine:
+      image: ubuntu-2004:202111-02
+      docker_layer_caching: true
+      resource_class: large
+    environment:
+      CACHE_IMAGE: zzak/rails-ci
+      DOCKER_BUILDKIT: 1
+      DOCKER_TAG: v1-ruby-<< parameters.ruby >>-{{ .Branch }}
+      RUBY_IMAGE: ruby:<< parameters.ruby >>
     steps:
-      - run: echo "Matrix parent for << parameters.label >>"
+      - checkout
+      - run:
+          name: Login to docker hub
+          command: docker login -u $REGISTRY_USER -p $REGISTRY_PASS
+      - run:
+          name: Build application Docker image
+          command: |
+            docker build \
+              --cache-from=$CACHE_IMAGE:$DOCKER_TAG \
+              --tag=$DOCKER_AGE \
+              --build-arg BUILDKIT_INLINE_CACHE=1 \
+              --build-arg RUBY_IMAGE=$RUBY_IMAGE \
+              -f .circleci/Dockerfile .
+      - run:
+          name: Push to docker hub
+          command: docker push $CACHE_IMAGE:$DOCKER_TAG
 
   test-job:
     parameters:
@@ -59,45 +79,48 @@ jobs:
       nodes:
         type: integer
         default: 1
-    machine:
-      image: ubuntu-2004:202111-02
-      docker_layer_caching: true
-      resource_class: large
+    docker:
+      - image: zzak/rails-ci:v1-ruby-<< parameters.ruby >>-{{ .Branch }}
+      - image: redis:alpine
+      - image: << parameters.mysql >>
+        command: "--default-authentication-plugin=mysql_native_password"
+        environment:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        #volumes:
+          #- "./mysql-initdb.d:/docker-entrypoint-initdb.d"
+      - image: memcached:alpine
+      - image: "${POSTGRES_IMAGE-postgres:alpine}"
+        environment:
+          POSTGRES_HOST_AUTH_METHOD: "trust"
+
+      - image: rabbitmq:alpine
+      - image: selenium/standalone-chrome:latest
+
+    resource_class: large
     parallelism: << parameters.nodes >>
     environment:
-      RUBY_IMAGE: ruby:<< parameters.ruby >>
-      MYSQL_IMAGE: << parameters.mysql >>
       MYSQL_PREPARED_STATEMENTS: << parameters.mysql_prepared_statements >>
+
+      MEMCACHE_SERVERS: "memcached:11211"
+      MYSQL_HOST: mysql
+      PGHOST: postgres
+      PGUSER: postgres
+      QC_DATABASE_URL: "postgres://postgres@postgres/active_jobs_qc_int_test"
+      QUE_DATABASE_URL: "postgres://postgres@postgres/active_jobs_que_int_test"
+      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672"
+      REDIS_URL: "redis://redis:6379/1"
+      SELENIUM_DRIVER_URL: "http://chrome:4444/wd/hub"
+
+      AWAIT_redis: tcp://redis:6379
+      AWAIT_memcached: tcp://memcached:11211
+      AWAIT_mysql: tcp://mysql:3306
+      AWAIT_postgres: postgres://postgres@postgres:5432/postgres
+      AWAIT_rabbitmq: tcp://rabbitmq:5672
+      AWAIT_chrome: tcp://chrome:4444
+
     steps:
       - checkout
-      - run:
-          name: Make cache directory
-          command: |
-            sudo mkdir /caches
-            sudo chown -R $USER:$USER /caches
-      - restore_cache:
-          keys:
-            - v1-ruby:<< parameters.ruby >>-{{ .Branch }}
-          paths:
-            - /caches/app.tar
-      - run:
-          name: Load Docker image layer cache
-          command: |
-            set +o pipefail
-            docker load -i /caches/app.tar | true
-      - run:
-          name: Build application Docker image
-          command: |
-            docker build --cache-from=app --build-arg MYSQL_IMAGE=$MYSQL_IMAGE --build-arg RUBY_IMAGE=$RUBY_IMAGE -t app -f .circleci/Dockerfile .
-      - run:
-          name: Save Docker image layer cache
-          command: |
-            mkdir -p /caches
-            docker save -o /caches/app.tar app
-      - save_cache:
-          key: v1-ruby:<< parameters.ruby >>-{{ .Branch }}-{{ epoch }}
-          paths:
-            - /caches/app.tar
+      - run: await-all
       - run-tests:
           gem: << parameters.gem >>
           command: << parameters.command >>
@@ -110,10 +133,10 @@ workflows:
   version: 2
   test:
     jobs:
-      - parent:
+      - build-image:
          matrix:
            parameters:
-             label: ["2.7", "3.0", "3.1", "latest"]
+             ruby: ["2.7", "3.0", "3.1", "latest"]
       - test-job:
           matrix:
             parameters:
@@ -121,7 +144,7 @@ workflows:
           name: actioncable-<< matrix.ruby >>
           gem: actioncable
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       #- actioncable-integration
       - test-job:
           matrix:
@@ -130,7 +153,7 @@ workflows:
           name: actionmailbox-<< matrix.ruby >>
           gem: actionmailbox
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -138,7 +161,7 @@ workflows:
           name: actionmailer-<< matrix.ruby >>
           gem: actionmailer
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -146,7 +169,7 @@ workflows:
           name: actionpack-<< matrix.ruby >>
           gem: actionpack
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -154,7 +177,7 @@ workflows:
           name: actiontext-<< matrix.ruby >>
           gem: actiontext
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -162,7 +185,7 @@ workflows:
           name: actionview-<< matrix.ruby >>
           gem: actionview
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -171,7 +194,7 @@ workflows:
           gem: actionview
           command: rake test:ujs
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -179,7 +202,7 @@ workflows:
           name: activestorage-<< matrix.ruby >>
           gem: activestorage
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -187,7 +210,7 @@ workflows:
           name: activesupport-<< matrix.ruby >>
           gem: activesupport
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -195,7 +218,7 @@ workflows:
           name: guides-<< matrix.ruby >>
           gem: guides
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -203,7 +226,7 @@ workflows:
           name: activejob-<< matrix.ruby >>
           gem: activejob
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -211,7 +234,7 @@ workflows:
           name: activemodel-<< matrix.ruby >>
           gem: activemodel
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -220,7 +243,7 @@ workflows:
           gem: railties
           nodes: 12
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -229,7 +252,7 @@ workflows:
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:test
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -239,7 +262,7 @@ workflows:
           command: rake db:mysql:rebuild mysql2:test
           mysql: mariadb:latest
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -249,7 +272,7 @@ workflows:
           command: rake db:mysql:rebuild mysql2:test
           mysql_prepared_statements: true
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -258,7 +281,7 @@ workflows:
           gem: activerecord
           command: rake db:postgresql:rebuild postgresql:test
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -267,7 +290,7 @@ workflows:
           gem: activerecord
           command: rake sqlite3:test
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -276,7 +299,7 @@ workflows:
           gem: activerecord
           command: rake sqlite3_mem:test
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -286,7 +309,7 @@ workflows:
           command: rake db:mysql:rebuild mysql2:isolated_test
           nodes: 5
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -296,7 +319,7 @@ workflows:
           command: rake db:postgresql:rebuild postgresql:isolated_test
           nodes: 5
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -306,7 +329,7 @@ workflows:
           command: rake sqlite3:isolated_test
           nodes: 5
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -315,7 +338,7 @@ workflows:
           gem: actionmailer
           command: rake test:isolated
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -324,7 +347,7 @@ workflows:
           gem: actionpack
           command: rake test:isolated
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -333,7 +356,7 @@ workflows:
           gem: actionview
           command: rake test:isolated
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -342,7 +365,7 @@ workflows:
           gem: activejob
           command: rake test:isolated
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -351,7 +374,7 @@ workflows:
           gem: activemodel
           command: rake test:isolated
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -360,4 +383,4 @@ workflows:
           gem: activesupport
           command: rake test:isolated
           requires:
-            - parent-<< matrix.ruby >>
+            - build-image-<< matrix.ruby >>
