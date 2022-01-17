@@ -50,7 +50,7 @@ executors:
       - image: << parameters.mysql >>
         command: "--default-authentication-plugin=mysql_native_password"
         environment:
-          - MYSQL_HOST: localhost
+          - MYSQL_HOST: 127.0.0.1
           - MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       - image: redis:alpine
       - image: rabbitmq:alpine
@@ -184,7 +184,7 @@ jobs:
       MYSQL_PREPARED_STATEMENTS: << parameters.mysql_prepared_statements >>
 
       MEMCACHE_SERVERS: "memcached:11211"
-      MYSQL_HOST: localhost
+      MYSQL_HOST: 127.0.0.1
       PGHOST: postgres
       PGUSER: postgres
       QC_DATABASE_URL: "postgres://postgres@postgres/active_jobs_qc_int_test"
@@ -195,7 +195,7 @@ jobs:
 
       AWAIT_redis: tcp://redis:6379
       AWAIT_memcached: tcp://memcached:11211
-      AWAIT_mysql: tcp://localhost:3306
+      AWAIT_mysql: tcp://127.0.0.1:3306
       AWAIT_postgres: postgres://postgres@postgres:5432/postgres
       AWAIT_rabbitmq: tcp://rabbitmq:5672
       AWAIT_chrome: tcp://chrome:4444
