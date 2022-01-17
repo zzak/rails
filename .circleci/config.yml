@@ -6,9 +6,6 @@ jobs:
   generate-config:
     docker:
       - image: cimg/ruby
-    parameters:
-      ruby:
-        type: string
     steps:
       - checkout
       - run:
