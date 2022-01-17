@@ -5,7 +5,7 @@ orbs:
 jobs:
   generate-config:
     docker:
-      - image: cimg/ruby:3.1
+      - image: ruby:3.1-alpine
     steps:
       - checkout
       - run:
