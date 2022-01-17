@@ -76,7 +76,7 @@ commands:
       - run:
           name: Bundle install
           command: |
-            export APP_IMAGE_TAG=<< parameters.tag >> \\
+            export APP_IMAGE_TAG=<< parameters.tag >>
             env COMPOSE_TLS_VERSION=TLSv1_2 \\
             docker-compose -f .circleci/docker-compose.yml run app install-deps
       - save_cache:
