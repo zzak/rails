@@ -103,7 +103,7 @@ jobs:
       - checkout
       - run:
           name: Login to docker hub
-          command: docker login -u \\$REGISTRY_USER -p \\$REGISTRY_PASS
+          command: docker login -u $REGISTRY_USER -p $REGISTRY_PASS
       - run:
           name: Build application Docker image
           command: |
