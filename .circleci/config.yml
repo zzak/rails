@@ -17,6 +17,8 @@ orbs:
 commands:
   run-tests:
     parameters:
+      ruby:
+        type: string
       gem:
         type: string
       command:
@@ -26,6 +28,8 @@ commands:
       - run:
           name: Run tests
           command: |
+            TAG=$(echo "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
+            export APP_IMAGE_TAG=zzak/rails-ci:v1-ruby-<< parameters.ruby >>-$TAG
             set +e
             .circleci/with-retry.sh \
             env COMPOSE_TLS_VERSION=TLSv1_2 \
@@ -160,6 +164,7 @@ jobs:
             export APP_IMAGE_TAG=zzak/rails-ci:v1-ruby-<< parameters.ruby >>-$TAG
             docker pull $APP_IMAGE_TAG
       - run-tests:
+          ruby: << parameters.ruby >>
           gem: << parameters.gem >>
           command: << parameters.command >>
       - store_test_results:
