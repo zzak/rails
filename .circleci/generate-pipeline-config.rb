@@ -101,6 +101,7 @@ jobs:
       resource_class: large
     environment:
       DOCKER_BUILDKIT: 1
+      RUBY_IMAGE: ruby:<< parameters.ruby >>
     steps:
       - checkout
       - run:
@@ -113,7 +114,7 @@ jobs:
               --cache-from=<< parameters.tag >> \\
               --tag=<< parameters.tag >> \\
               --build-arg BUILDKIT_INLINE_CACHE=1 \\
-              --build-arg RUBY_IMAGE=<< parameters.ruby >> \\
+              --build-arg RUBY_IMAGE=$RUBY_IMAGE \\
               -f .circleci/Dockerfile .
       - run:
           name: Push to docker hub
