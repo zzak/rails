@@ -1,3 +1,8 @@
+#!/bin/sh
+
+echo "--- :bundler: Installing Ruby deps" \
+    && rm Gemfile.lock && bundle install -j 8 --path vendor/bundle
+
 if [ -f package.json ]; then \
     echo "--- :javascript: Installing JavaScript deps" \
     && yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
@@ -5,10 +10,6 @@ elif [ -f actionview/package.json ]; then \
     echo "--- :javascript: Installing JavaScript deps" \
     && (cd actionview && npm install); \
 fi
-
-echo "--- :bundler: Installing Ruby deps" \
-    && (cd tmp && for f in *.gemspec; do d="$(basename -s.gemspec "$f")"; mkdir -p "../$d" && mv "$f" "../$d/"; done) \
-    && rm Gemfile.lock && bundle install -j 8 --path vendor/bundle
 
 if [ -f package.json ]; then \
     echo "--- :javascript: Building JavaScript package" \
