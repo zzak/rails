@@ -50,6 +50,7 @@ executors:
       - image: << parameters.mysql >>
         command: "--default-authentication-plugin=mysql_native_password"
         environment:
+          - MYSQL_HOST: 127.0.0.1
           - MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       - image: redis:alpine
       - image: rabbitmq:alpine
@@ -183,7 +184,7 @@ jobs:
       MYSQL_PREPARED_STATEMENTS: << parameters.mysql_prepared_statements >>
 
       MEMCACHE_SERVERS: "memcached:11211"
-      MYSQL_HOST: mysql
+      MYSQL_HOST: localhost
       PGHOST: postgres
       PGUSER: postgres
       QC_DATABASE_URL: "postgres://postgres@postgres/active_jobs_qc_int_test"
