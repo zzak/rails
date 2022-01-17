@@ -116,7 +116,7 @@ jobs:
           name: Pull build image
           command: |
             TAG=$(echo "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
-            export APP_IMAGE_TAG=v1-ruby-<< parameters.ruby >>-$TAG
+            export APP_IMAGE_TAG=zzak/rails-ci:v1-ruby-<< parameters.ruby >>-$TAG
             docker pull $APP_IMAGE_TAG
       - bundle-install:
           ruby: << parameters.ruby >>
@@ -157,7 +157,7 @@ jobs:
           name: Pull build image
           command: |
             TAG=$(echo "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
-            export APP_IMAGE_TAG=v1-ruby-<< parameters.ruby >>-$TAG
+            export APP_IMAGE_TAG=zzak/rails-ci:v1-ruby-<< parameters.ruby >>-$TAG
             docker pull $APP_IMAGE_TAG
       - run-tests:
           gem: << parameters.gem >>
