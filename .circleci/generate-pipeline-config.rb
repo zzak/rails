@@ -1,13 +1,28 @@
-#!/bin/bash
-set -o pipefail
+require "digest"
+require "fileutils"
 
-RUBY_TAG=$1
+SUPPORTED_RUBIES = ["2.7", "3.0", "3.1", "latest"]
 
-TAG=$(echo -n "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
-APP_IMAGE_TAG=$(echo -n "zzak/rails-ci:v1-ruby-$RUBY_TAG-$TAG" | xargs)
+def digest tag
+  Digest::SHA2.hexdigest(tag)
+end
 
-mkdir configs/
-cat << EOF > configs/generated_config.yml
+def image_tag
+  digest "#{ENV["CIRCLE_PROJECT_USER"]}.#{ENV["CIRCLE_BRANCH"]}"
+end
+
+def image_label ruby
+  "zzak/rails-ci-v1-ruby-#{ruby}-#{image_tag}"
+end
+
+def write_config cfg
+  File.open("configs/generated_config.yml", "w") do |f|
+    f.write cfg
+  end
+end
+
+def config ruby, tag
+  return <<-EOF
 version: 2.1
 
 orbs:
@@ -25,45 +40,59 @@ commands:
       - run:
           name: Run tests
           command: |
-            export APP_IMAGE_TAG=$APP_IMAGE_TAG
+            export APP_IMAGE_TAG=#{tag}
             set +e
-            .circleci/with-retry.sh \
-            env COMPOSE_TLS_VERSION=TLSv1_2 \
+            .circleci/with-retry.sh \\
+            env COMPOSE_TLS_VERSION=TLSv1_2 \\
             docker-compose -f .circleci/docker-compose.yml run app runner << parameters.gem >> "<< parameters.command >>"
 
   bundle-restore:
+    parameters:
+      ruby:
+        type: string
     steps:
       - restore_cache:
           keys:
-            - gem-cache-v1-ruby-$RUBY_TAG-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
-            - gem-cache-v1-ruby-$RUBY_TAG-{{ .Branch }}
-            - gem-cache-v1-ruby-$RUBY_TAG
+            - gem-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
+            - gem-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}
+            - gem-cache-v1-ruby-<< parameters.ruby >>
       - restore_cache:
           keys:
-            - yarn-cache-v1-ruby-$RUBY_TAG-{{ .Branch }}-{{ checksum "yarn.lock" }}
-            - yarn-cache-v1-ruby-$RUBY_TAG-{{ .Branch }}
-            - yarn-cache-v1-ruby-$RUBY_TAG
+            - yarn-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
+            - yarn-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}
+            - yarn-cache-v1-ruby-<< parameters.ruby >>
 
   bundle-install:
+    parameters:
+      ruby:
+        type: string
+      tag:
+        type: string
     steps:
-      - bundle-restore
+      - bundle-restore:
+          ruby: << parameters.ruby >>
       - run:
           name: Bundle install
           command: |
-            export APP_IMAGE_TAG=$APP_IMAGE_TAG
-            env COMPOSE_TLS_VERSION=TLSv1_2 \
+            export APP_IMAGE_TAG=<< parameters.tag >> \\
+            env COMPOSE_TLS_VERSION=TLSv1_2 \\
             docker-compose -f .circleci/docker-compose.yml run app install-deps
       - save_cache:
-          key: gem-cache-v1-ruby-$RUBY_TAG-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
+          key: gem-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
           paths:
             - vendor/bundler
       - save_cache:
-          key: yarn-cache-v1-ruby-$RUBY_TAG-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          key: yarn-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
 
 jobs:
   build-image:
+    parameters:
+      ruby:
+        type: string
+      tag:
+        type: string
     machine:
       image: ubuntu-2004:202111-02
       docker_layer_caching: true
@@ -74,22 +103,27 @@ jobs:
       - checkout
       - run:
           name: Login to docker hub
-          command: docker login -u \$REGISTRY_USER -p \$REGISTRY_PASS
+          command: docker login -u \\$REGISTRY_USER -p \\$REGISTRY_PASS
       - run:
           name: Build application Docker image
           command: |
-            docker build \
-              --cache-from=$APP_IMAGE_TAG \
-              --tag=$APP_IMAGE_TAG \
-              --build-arg BUILDKIT_INLINE_CACHE=1 \
-              --build-arg RUBY_IMAGE=$RUBY_TAG \
+            docker build \\
+              --cache-from=<< parameters.tag >> \\
+              --tag=<< parameters.tag >> \\
+              --build-arg BUILDKIT_INLINE_CACHE=1 \\
+              --build-arg RUBY_IMAGE=<< parameters.ruby >> \\
               -f .circleci/Dockerfile .
       - run:
           name: Push to docker hub
           command: |
-            docker push $APP_IMAGE_TAG
+            docker push << parameters.tag >>
 
   install-deps:
+    parameters:
+      ruby:
+        type: string
+      tag:
+        type: string
     machine:
       image: ubuntu-2004:202111-02
       docker_layer_caching: true
@@ -99,8 +133,10 @@ jobs:
       - run:
           name: Pull build image
           command: |
-            docker pull $APP_IMAGE_TAG
-      - bundle-install
+            docker pull << parameters.tag >>
+      - bundle-install:
+          ruby: << parameters.ruby >>
+          tag: << parameters.tag >>
 
   test-job:
     parameters:
@@ -115,6 +151,10 @@ jobs:
       mysql_prepared_statements:
         type: boolean
         default: false
+      ruby:
+        type: string
+      tag:
+        type: string
       nodes:
         type: integer
         default: 1
@@ -128,11 +168,12 @@ jobs:
       MYSQL_PREPARED_STATEMENTS: << parameters.mysql_prepared_statements >>
     steps:
       - checkout
-      - bundle-restore
+      - bundle-restore:
+          ruby: << parameters.ruby >>
       - run:
           name: Pull build image
           command: |
-            docker pull $APP_IMAGE_TAG
+            docker pull << parameters.ruby >>
       - run-tests:
           gem: << parameters.gem >>
           command: << parameters.command >>
@@ -143,90 +184,140 @@ jobs:
 
 workflows:
   version: 2
-  test:
+#{workflows}
+EOF
+end
+
+def workflows
+  output = ""
+  SUPPORTED_RUBIES.each do |ruby|
+    output << <<-EOF
+  ruby-#{ruby}:
+EOF
+    output << jobs(ruby, image_label(ruby))
+  end
+  output
+end
+
+def jobs ruby, tag
+  return <<-EOF
     jobs:
       - build-image:
+          ruby: "#{ruby}"
+          tag: #{tag}
       - install-deps:
           name: install-deps
+          ruby: "#{ruby}"
+          tag: #{tag}
           requires:
             - build-image
       - test-job:
           name: actioncable
           gem: actioncable
+          ruby: "#{ruby}"
+          tag: #{tag}
           requires:
             - install-deps
       #- actioncable-integration
       - test-job:
           name: actionmailbox
           gem: actionmailbox
+          ruby: "#{ruby}"
+          tag: #{tag}
           requires:
             - install-deps
       - test-job:
           name: actionmailer
           gem: actionmailer
+          ruby: "#{ruby}"
+          tag: #{tag}
           requires:
             - install-deps
       - test-job:
           name: actionpack
           gem: actionpack
+          ruby: "#{ruby}"
+          tag: #{tag}
           requires:
             - install-deps
       - test-job:
           name: actiontext
           gem: actiontext
+          ruby: "#{ruby}"
+          tag: #{tag}
           requires:
             - install-deps
       - test-job:
           name: actionview
           gem: actionview
+          ruby: "#{ruby}"
+          tag: #{tag}
           requires:
             - install-deps
       - test-job:
           name: actionview-ujs
           gem: actionview
+          ruby: "#{ruby}"
+          tag: #{tag}
           command: rake test:ujs
           requires:
             - install-deps
       - test-job:
           name: activestorage
           gem: activestorage
+          ruby: "#{ruby}"
+          tag: #{tag}
           requires:
             - install-deps
       - test-job:
           name: activesupport
           gem: activesupport
+          ruby: "#{ruby}"
+          tag: #{tag}
           requires:
             - install-deps
       - test-job:
           name: guides
           gem: guides
+          ruby: "#{ruby}"
+          tag: #{tag}
           requires:
             - install-deps
       - test-job:
           name: activejob
           gem: activejob
+          ruby: "#{ruby}"
+          tag: #{tag}
           requires:
             - install-deps
       - test-job:
           name: activemodel
           gem: activemodel
+          ruby: "#{ruby}"
+          tag: #{tag}
           requires:
             - install-deps
       - test-job:
           name: railties
           gem: railties
+          ruby: "#{ruby}"
+          tag: #{tag}
           nodes: 12
           requires:
             - install-deps
       - test-job:
           name: activerecord-mysql2
           gem: activerecord
+          ruby: "#{ruby}"
+          tag: #{tag}
           command: rake db:mysql:rebuild mysql2:test
           requires:
             - install-deps
       - test-job:
           name: activrecord-mysql2-mariadb
           gem: activerecord
+          ruby: "#{ruby}"
+          tag: #{tag}
           command: rake db:mysql:rebuild mysql2:test
           mysql: mariadb:latest
           requires:
@@ -234,6 +325,8 @@ workflows:
       - test-job:
           name: activrecord-mysql2-prepared-statements
           gem: activerecord
+          ruby: "#{ruby}"
+          tag: #{tag}
           command: rake db:mysql:rebuild mysql2:test
           mysql_prepared_statements: true
           requires:
@@ -241,24 +334,32 @@ workflows:
       - test-job:
           name: activerecord-postgresql
           gem: activerecord
+          ruby: "#{ruby}"
+          tag: #{tag}
           command: rake db:postgresql:rebuild postgresql:test
           requires:
             - install-deps
       - test-job:
           name: activerecord-sqlite3
           gem: activerecord
+          ruby: "#{ruby}"
+          tag: #{tag}
           command: rake sqlite3:test
           requires:
             - install-deps
       - test-job:
           name: activerecord-sqlite3_mem
           gem: activerecord
+          ruby: "#{ruby}"
+          tag: #{tag}
           command: rake sqlite3_mem:test
           requires:
             - install-deps
       - test-job:
           name: activrecord-mysql2-isolated
           gem: activerecord
+          ruby: "#{ruby}"
+          tag: #{tag}
           command: rake db:mysql:rebuild mysql2:isolated_test
           nodes: 5
           requires:
@@ -266,6 +367,8 @@ workflows:
       - test-job:
           name: activerecord-postgresql-isolated
           gem: activerecord
+          ruby: "#{ruby}"
+          tag: #{tag}
           command: rake db:postgresql:rebuild postgresql:isolated_test
           nodes: 5
           requires:
@@ -273,6 +376,8 @@ workflows:
       - test-job:
           name: activerecord-sqlite3-isolated
           gem: activerecord
+          ruby: "#{ruby}"
+          tag: #{tag}
           command: rake sqlite3:isolated_test
           nodes: 5
           requires:
@@ -280,37 +385,54 @@ workflows:
       - test-job:
           name: actionmailer-isolated
           gem: actionmailer
+          ruby: "#{ruby}"
+          tag: #{tag}
           command: rake test:isolated
           requires:
             - install-deps
       - test-job:
           name: actionpack-isolated
           gem: actionpack
+          ruby: "#{ruby}"
+          tag: #{tag}
           command: rake test:isolated
           requires:
             - install-deps
       - test-job:
           name: actionview-isolated
           gem: actionview
+          ruby: "#{ruby}"
+          tag: #{tag}
           command: rake test:isolated
           requires:
             - install-deps
       - test-job:
           name: activejob-isolated
           gem: activejob
+          ruby: "#{ruby}"
+          tag: #{tag}
           command: rake test:isolated
           requires:
             - install-deps
       - test-job:
           name: activemodel-isolated
           gem: activemodel
+          ruby: "#{ruby}"
+          tag: #{tag}
           command: rake test:isolated
           requires:
             - install-deps
       - test-job:
           name: activesupport-isolated
           gem: activesupport
+          ruby: "#{ruby}"
+          tag: #{tag}
           command: rake test:isolated
           requires:
             - install-deps
 EOF
+end
+
+FileUtils.mkdir_p "configs/"
+
+write_config config("3.1.0", image_label("3.1.0"))

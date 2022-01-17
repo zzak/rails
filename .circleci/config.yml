@@ -4,7 +4,8 @@ orbs:
   continuation: circleci/continuation@0.1.0
 jobs:
   generate-config:
-    executor: continuation/default
+    docker:
+      - image: cimg/ruby
     parameters:
       ruby:
         type: string
@@ -12,15 +13,11 @@ jobs:
       - checkout
       - run:
           name: Generate Pipeline generated_config.yml file
-          command: .circleci/generate-pipeline-config "<< parameters.ruby >>"
+          command: ruby .circleci/generate-pipeline-config.rb
       - continuation/continue:
           parameters: '{}'
           configuration_path: configs/generated_config.yml
 workflows:
   setup-workflow:
     jobs:
-      - generate-config:
-         matrix:
-           parameters:
-             ruby: ["2.7", "3.0", "3.1", "latest"]
-         name: setup-workflow-<< matrix.ruby >>
+      - generate-config
