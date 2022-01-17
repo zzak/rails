@@ -12,16 +12,16 @@ def image_tag
 end
 
 def image_label ruby
-  "zzak/rails-ci-v1-ruby-#{ruby}-#{image_tag}"
+  "zzak/rails-ci:v1-ruby-#{ruby}-#{image_tag}"
 end
 
-def write_config cfg
+def write cfg
   File.open("configs/generated_config.yml", "w") do |f|
     f.write cfg
   end
 end
 
-def config ruby, tag
+def config
   return <<-EOF
 version: 2.1
 
@@ -31,6 +31,8 @@ orbs:
 commands:
   run-tests:
     parameters:
+      tag:
+        type: string
       gem:
         type: string
       command:
@@ -40,7 +42,7 @@ commands:
       - run:
           name: Run tests
           command: |
-            export APP_IMAGE_TAG=#{tag}
+            export APP_IMAGE_TAG=<< parameters.tag >>
             set +e
             .circleci/with-retry.sh \\
             env COMPOSE_TLS_VERSION=TLSv1_2 \\
@@ -175,6 +177,7 @@ jobs:
           command: |
             docker pull << parameters.ruby >>
       - run-tests:
+          tag: << parameters.tag >>
           gem: << parameters.gem >>
           command: << parameters.command >>
       - store_test_results:
@@ -435,4 +438,4 @@ end
 
 FileUtils.mkdir_p "configs/"
 
-write_config config("3.1.0", image_label("3.1.0"))
+write config
