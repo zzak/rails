@@ -162,7 +162,7 @@ jobs:
         default: rake test
       mysql:
         type: string
-        default: mysql:latest
+        default: circleci/mysql:latest
       mysql_prepared_statements:
         type: boolean
         default: false
