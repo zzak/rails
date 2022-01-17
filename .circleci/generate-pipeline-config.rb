@@ -50,7 +50,7 @@ executors:
       - image: << parameters.mysql >>
         command: "--default-authentication-plugin=mysql_native_password"
         environment:
-          - MYSQL_HOST: 127.0.0.1
+          - MYSQL_HOST: localhost
           - MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       - image: redis:alpine
       - image: rabbitmq:alpine
@@ -195,7 +195,7 @@ jobs:
 
       AWAIT_redis: tcp://redis:6379
       AWAIT_memcached: tcp://memcached:11211
-      AWAIT_mysql: tcp://mysql:3306
+      AWAIT_mysql: tcp://localhost:3306
       AWAIT_postgres: postgres://postgres@postgres:5432/postgres
       AWAIT_rabbitmq: tcp://rabbitmq:5672
       AWAIT_chrome: tcp://chrome:4444
