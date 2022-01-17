@@ -81,7 +81,8 @@ jobs:
       - run:
           name: Build application Docker image
           command: |
-            export DOCKER_TAG=v1-ruby-<< parameters.ruby >>-dev
+            TAG=$(echo "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
+            export DOCKER_TAG=v1-ruby-<< parameters.ruby >>-$TAG
 
             docker build \
               --cache-from=$CACHE_IMAGE:$DOCKER_TAG \
@@ -92,7 +93,8 @@ jobs:
       - run:
           name: Push to docker hub
           command: |
-            export DOCKER_TAG=v1-ruby-<< parameters.ruby >>-dev
+            TAG=$(echo "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
+            export DOCKER_TAG=v1-ruby-<< parameters.ruby >>-$TAG
             docker push $CACHE_IMAGE:$DOCKER_TAG
 
   bundle-install:
@@ -105,13 +107,15 @@ jobs:
       docker_layer_caching: true
       resource_class: large
     environment:
-      APP_IMAGE_TAG: zzak/rails-ci:v1-ruby-<< parameters.ruby >>-dev
       RUBY_IMAGE: << parameters.ruby >>
     steps:
       - checkout
       - run:
           name: Pull build image
-          command: docker pull $APP_IMAGE_TAG
+          command: |
+            TAG=$(echo "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
+            export APP_IMAGE_TAG=v1-ruby-<< parameters.ruby >>-$TAG
+            docker pull $APP_IMAGE_TAG
       - bundle-install:
           ruby: << parameters.ruby >>
 
@@ -140,7 +144,6 @@ jobs:
       resource_class: large
     parallelism: << parameters.nodes >>
     environment:
-      APP_IMAGE_TAG: zzak/rails-ci:v1-ruby-<< parameters.ruby >>-dev
       RUBY_IMAGE: << parameters.ruby >>
       MYSQL_IMAGE: << parameters.mysql >>
       MYSQL_PREPARED_STATEMENTS: << parameters.mysql_prepared_statements >>
@@ -150,7 +153,10 @@ jobs:
           ruby: << parameters.ruby >>
       - run:
           name: Pull build image
-          command: docker pull $APP_IMAGE_TAG
+          command: |
+            TAG=$(echo "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
+            export APP_IMAGE_TAG=v1-ruby-<< parameters.ruby >>-$TAG
+            docker pull $APP_IMAGE_TAG
       - run-tests:
           gem: << parameters.gem >>
           command: << parameters.command >>
