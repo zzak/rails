@@ -70,7 +70,7 @@ commands:
       - save_cache:
           key: gem-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
           paths:
-            - vendor/bundlers.ruby
+            - vendor/bundler
       - save_cache:
           key: yarn-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
           paths:
