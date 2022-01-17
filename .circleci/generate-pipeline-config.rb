@@ -98,10 +98,16 @@ commands:
       - run:
           name: Bundle install
           command: install-deps
+
+  save-cache:
+    parameters:
+      ruby:
+        type: string
+    steps:
       - save_cache:
           key: gem-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile" }}
           paths:
-            - vendor/bundler
+            - ~/project/vendor/bundler
       - save_cache:
           key: yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
           paths:
@@ -153,6 +159,8 @@ jobs:
       - checkout
       - bundle-install:
           ruby: << parameters.ruby >>
+      - save-cache:
+          ruby: << parameters.ruby >>
 
   test-job:
     parameters:
@@ -203,6 +211,8 @@ jobs:
     steps:
       - checkout
       - bundle-restore:
+          ruby: << parameters.ruby >>
+      - bundle-install:
           ruby: << parameters.ruby >>
       - run: await-all
       - run-tests:
