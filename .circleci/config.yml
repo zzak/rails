@@ -46,6 +46,11 @@ commands:
             - gem-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
             - gem-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}
             - gem-cache-v1-ruby-<< parameters.ruby >>
+      - restore_cache:
+          keys:
+            - yarn-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
+            - yarn-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}
+            - yarn-cache-v1-ruby-<< parameters.ruby >>
 
   bundle-install:
     parameters:
@@ -61,11 +66,15 @@ commands:
             TAG=$(echo "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
             export APP_IMAGE_TAG=zzak/rails-ci:v1-ruby-<< parameters.ruby >>-$TAG
             env COMPOSE_TLS_VERSION=TLSv1_2 \
-            docker-compose -f .circleci/docker-compose.yml run app bundle install --path vendor/bundle
+            docker-compose -f .circleci/docker-compose.yml run app install-deps
       - save_cache:
           key: gem-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
           paths:
             - vendor/bundlers.ruby
+      - save_cache:
+          key: yarn-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
 
 jobs:
   build-image:
@@ -105,7 +114,7 @@ jobs:
             export DOCKER_TAG=v1-ruby-<< parameters.ruby >>-$TAG
             docker push $CACHE_IMAGE:$DOCKER_TAG
 
-  bundle-install:
+  install-deps:
     parameters:
       ruby:
         type: string
@@ -182,11 +191,11 @@ workflows:
          matrix:
            parameters:
              ruby: ["2.7", "3.0", "3.1", "latest"]
-      - bundle-install:
+      - install-deps:
           matrix:
             parameters:
               ruby: ["2.7", "3.0", "3.1", "latest"]
-          name: bundle-install-<< matrix.ruby >>
+          name: install-deps-<< matrix.ruby >>
           requires:
             - build-image-<< matrix.ruby >>
       - test-job:
@@ -196,7 +205,7 @@ workflows:
           name: actioncable-<< matrix.ruby >>
           gem: actioncable
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       #- actioncable-integration
       - test-job:
           matrix:
@@ -205,7 +214,7 @@ workflows:
           name: actionmailbox-<< matrix.ruby >>
           gem: actionmailbox
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -213,7 +222,7 @@ workflows:
           name: actionmailer-<< matrix.ruby >>
           gem: actionmailer
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -221,7 +230,7 @@ workflows:
           name: actionpack-<< matrix.ruby >>
           gem: actionpack
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -229,7 +238,7 @@ workflows:
           name: actiontext-<< matrix.ruby >>
           gem: actiontext
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -237,7 +246,7 @@ workflows:
           name: actionview-<< matrix.ruby >>
           gem: actionview
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -246,7 +255,7 @@ workflows:
           gem: actionview
           command: rake test:ujs
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -254,7 +263,7 @@ workflows:
           name: activestorage-<< matrix.ruby >>
           gem: activestorage
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -262,7 +271,7 @@ workflows:
           name: activesupport-<< matrix.ruby >>
           gem: activesupport
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -270,7 +279,7 @@ workflows:
           name: guides-<< matrix.ruby >>
           gem: guides
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -278,7 +287,7 @@ workflows:
           name: activejob-<< matrix.ruby >>
           gem: activejob
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -286,7 +295,7 @@ workflows:
           name: activemodel-<< matrix.ruby >>
           gem: activemodel
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -295,7 +304,7 @@ workflows:
           gem: railties
           nodes: 12
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -304,7 +313,7 @@ workflows:
           gem: activerecord
           command: rake db:mysql:rebuild mysql2:test
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -314,7 +323,7 @@ workflows:
           command: rake db:mysql:rebuild mysql2:test
           mysql: mariadb:latest
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -324,7 +333,7 @@ workflows:
           command: rake db:mysql:rebuild mysql2:test
           mysql_prepared_statements: true
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -333,7 +342,7 @@ workflows:
           gem: activerecord
           command: rake db:postgresql:rebuild postgresql:test
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -342,7 +351,7 @@ workflows:
           gem: activerecord
           command: rake sqlite3:test
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -351,7 +360,7 @@ workflows:
           gem: activerecord
           command: rake sqlite3_mem:test
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -361,7 +370,7 @@ workflows:
           command: rake db:mysql:rebuild mysql2:isolated_test
           nodes: 5
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -371,7 +380,7 @@ workflows:
           command: rake db:postgresql:rebuild postgresql:isolated_test
           nodes: 5
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -381,7 +390,7 @@ workflows:
           command: rake sqlite3:isolated_test
           nodes: 5
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -390,7 +399,7 @@ workflows:
           gem: actionmailer
           command: rake test:isolated
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -399,7 +408,7 @@ workflows:
           gem: actionpack
           command: rake test:isolated
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -408,7 +417,7 @@ workflows:
           gem: actionview
           command: rake test:isolated
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -417,7 +426,7 @@ workflows:
           gem: activejob
           command: rake test:isolated
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -426,7 +435,7 @@ workflows:
           gem: activemodel
           command: rake test:isolated
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>
       - test-job:
           matrix:
             parameters:
@@ -435,4 +444,4 @@ workflows:
           gem: activesupport
           command: rake test:isolated
           requires:
-            - bundle-install-<< matrix.ruby >>
+            - install-deps-<< matrix.ruby >>

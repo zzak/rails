@@ -101,48 +101,7 @@ WORKDIR /rails
 ENV RAILS_ENV=test RACK_ENV=test
 ENV JRUBY_OPTS="--dev -J-Xmx1024M"
 
-ADD .circleci/await-all .circleci/runner /usr/local/bin/
-RUN chmod +x /usr/local/bin/await-all /usr/local/bin/runner
-
-## Wildcard ignores missing files; .empty ensures ADD always has at least
-## one valid source: https://stackoverflow.com/a/46801962
-ADD .circleci/.empty actioncable/package.jso[n] actioncable/
-ADD .circleci/.empty actiontext/package.jso[n] actiontext/
-ADD .circleci/.empty actionview/package.jso[n] actionview/
-ADD .circleci/.empty activestorage/package.jso[n] activestorage/
-ADD .circleci/.empty package.jso[n] yarn.loc[k] .yarnr[c] ./
-
-RUN rm -f .empty */.empty \
-    && find . -maxdepth 1 -type d -empty -exec rmdir '{}' '+' \
-    && if [ -f package.json ]; then \
-        echo "--- :javascript: Installing JavaScript deps" \
-        && yarn install \
-        && yarn cache clean; \
-    elif [ -f actionview/package.json ]; then \
-        echo "--- :javascript: Installing JavaScript deps" \
-        && (cd actionview && npm install); \
-    fi
-
-ADD */*.gemspec tmp/
-ADD .circleci/.empty railties/exe/* railties/exe/
-ADD Gemfile Gemfile.lock RAILS_VERSION rails.gemspec ./
-
-RUN rm -f railties/exe/.empty \
-    && find railties/exe -maxdepth 0 -type d -empty -exec rmdir '{}' '+' \
-    && echo "--- :bundler: Installing Ruby deps" \
-    && (cd tmp && for f in *.gemspec; do d="$(basename -s.gemspec "$f")"; mkdir -p "../$d" && mv "$f" "../$d/"; done) \
-    && rm Gemfile.lock && bundle install -j 8 && cp Gemfile.lock tmp/Gemfile.lock.updated \
-    && rm -rf /usr/local/bundle/cache \
-    && echo "--- :floppy_disk: Copying repository contents"
+ADD .circleci/await-all .circleci/runner .circleci/install-deps /usr/local/bin/
+RUN chmod +x /usr/local/bin/await-all /usr/local/bin/runner /usr/local/bin/install-deps
 
 ADD . ./
-
-RUN mv -f tmp/Gemfile.lock.updated Gemfile.lock \
-    && if [ -f package.json ]; then \
-        echo "--- :javascript: Building JavaScript package" \
-        && (cd actionview && yarn build) \
-        && if [ -f railties/test/isolation/assets/package.json ]; then \
-            (cd railties/test/isolation/assets && yarn install); \
-        fi \
-        && yarn cache clean; \
-    fi
