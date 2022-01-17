@@ -54,6 +54,7 @@ executors:
       - image: redis:alpine
       - image: rabbitmq:alpine
       - image: memcached:alpine
+      - image: selenium/standalone-chrome:latest
 
 commands:
   run-tests:
@@ -180,10 +181,29 @@ jobs:
     parallelism: << parameters.nodes >>
     environment:
       MYSQL_PREPARED_STATEMENTS: << parameters.mysql_prepared_statements >>
+
+      MEMCACHE_SERVERS: "memcached:11211"
+      MYSQL_HOST: mysql
+      PGHOST: postgres
+      PGUSER: postgres
+      QC_DATABASE_URL: "postgres://postgres@postgres/active_jobs_qc_int_test"
+      QUE_DATABASE_URL: "postgres://postgres@postgres/active_jobs_que_int_test"
+      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672"
+      REDIS_URL: "redis://redis:6379/1"
+      SELENIUM_DRIVER_URL: "http://chrome:4444/wd/hub"
+
+      AWAIT_redis: tcp://redis:6379
+      AWAIT_memcached: tcp://memcached:11211
+      AWAIT_mysql: tcp://mysql:3306
+      AWAIT_postgres: postgres://postgres@postgres:5432/postgres
+      AWAIT_rabbitmq: tcp://rabbitmq:5672
+      AWAIT_chrome: tcp://chrome:4444
+
     steps:
       - checkout
       - bundle-restore:
           ruby: << parameters.ruby >>
+      - run: await-all
       - run-tests:
           gem: << parameters.gem >>
           command: << parameters.command >>
