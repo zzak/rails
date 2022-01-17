@@ -28,11 +28,27 @@ version: 2.1
 orbs:
   browser-tools: circleci/browser-tools@1.2.3
 
-commands:
-  run-tests:
+executors:
+  default:
     parameters:
       tag:
         type: string
+    docker:
+      - image: << parameters.tag >>
+      - image: postgres:alpine
+        environment:
+          - POSTGRES_HOST_AUTH_METHOD: "trust"
+      - image: mysql:latest
+        command: "--default-authentication-plugin=mysql_native_password"
+        environment:
+          - MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      - image: redis:alpine
+      - image: rabbitmq:alpine
+      - image: memcached:alpine
+
+commands:
+  run-tests:
+    parameters:
       gem:
         type: string
       command:
@@ -42,11 +58,8 @@ commands:
       - run:
           name: Run tests
           command: |
-            export APP_IMAGE_TAG=<< parameters.tag >>
             set +e
-            .circleci/with-retry.sh \\
-            env COMPOSE_TLS_VERSION=TLSv1_2 \\
-            docker-compose -f .circleci/docker-compose.yml run app runner << parameters.gem >> "<< parameters.command >>"
+            .circleci/with-retry.sh runner << parameters.gem >> "<< parameters.command >>"
 
   bundle-restore:
     parameters:
@@ -68,17 +81,12 @@ commands:
     parameters:
       ruby:
         type: string
-      tag:
-        type: string
     steps:
       - bundle-restore:
           ruby: << parameters.ruby >>
       - run:
           name: Bundle install
-          command: |
-            export APP_IMAGE_TAG=<< parameters.tag >>
-            env COMPOSE_TLS_VERSION=TLSv1_2 \\
-            docker-compose -f .circleci/docker-compose.yml run app install-deps
+          command: install-deps
       - save_cache:
           key: gem-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
           paths:
@@ -127,18 +135,13 @@ jobs:
         type: string
       tag:
         type: string
-    machine:
-      image: ubuntu-2004:202111-02
-      docker_layer_caching: true
-      resource_class: large
+    executor:
+      name: default
+      tag: << parameters.tag >>
     steps:
       - checkout
-      - run:
-          name: Pull build image
-          command: docker pull << parameters.tag >>
       - bundle-install:
           ruby: << parameters.ruby >>
-          tag: << parameters.tag >>
 
   test-job:
     parameters:
@@ -160,10 +163,10 @@ jobs:
       nodes:
         type: integer
         default: 1
-    machine:
-      image: ubuntu-2004:202111-02
-      docker_layer_caching: true
-      resource_class: large
+    executor:
+      name: default
+      tag: << parameters.tag >>
+    resource_class: large
     parallelism: << parameters.nodes >>
     environment:
       MYSQL_IMAGE: << parameters.mysql >>
@@ -172,11 +175,7 @@ jobs:
       - checkout
       - bundle-restore:
           ruby: << parameters.ruby >>
-      - run:
-          name: Pull build image
-          command: docker pull << parameters.tag >>
       - run-tests:
-          tag: << parameters.tag >>
           gem: << parameters.gem >>
           command: << parameters.command >>
       - store_test_results:
