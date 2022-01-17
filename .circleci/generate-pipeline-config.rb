@@ -29,16 +29,25 @@ orbs:
   browser-tools: circleci/browser-tools@1.2.3
 
 executors:
+  base:
+    parameters:
+      tag:
+        type: string
+    docker:
+      - image: << parameters.tag >>
+
   default:
     parameters:
       tag:
+        type: string
+      mysql:
         type: string
     docker:
       - image: << parameters.tag >>
       - image: postgres:alpine
         environment:
           - POSTGRES_HOST_AUTH_METHOD: "trust"
-      - image: mysql:latest
+      - image: << parameters.mysql >>
         command: "--default-authentication-plugin=mysql_native_password"
         environment:
           - MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
@@ -136,7 +145,7 @@ jobs:
       tag:
         type: string
     executor:
-      name: default
+      name: base
       tag: << parameters.tag >>
     steps:
       - checkout
@@ -165,11 +174,11 @@ jobs:
         default: 1
     executor:
       name: default
+      mysql: << parameters.mysql >>
       tag: << parameters.tag >>
     resource_class: large
     parallelism: << parameters.nodes >>
     environment:
-      MYSQL_IMAGE: << parameters.mysql >>
       MYSQL_PREPARED_STATEMENTS: << parameters.mysql_prepared_statements >>
     steps:
       - checkout
