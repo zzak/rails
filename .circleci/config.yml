@@ -28,8 +28,8 @@ commands:
       - run:
           name: Run tests
           command: |
-            TAG=$(echo "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
-            export APP_IMAGE_TAG=zzak/rails-ci:v1-ruby-<< parameters.ruby >>-$TAG
+            TAG=$(echo -n "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
+            export APP_IMAGE_TAG=$(echo -n "zzak/rails-ci:v1-ruby-<< parameters.ruby >>-$TAG" | xargs)
             set +e
             .circleci/with-retry.sh \
             env COMPOSE_TLS_VERSION=TLSv1_2 \
@@ -63,8 +63,8 @@ commands:
       - run:
           name: Bundle install
           command: |
-            TAG=$(echo "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
-            export APP_IMAGE_TAG=zzak/rails-ci:v1-ruby-<< parameters.ruby >>-$TAG
+            TAG=$(echo -n "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
+            export APP_IMAGE_TAG=$(echo -n "zzak/rails-ci:v1-ruby-<< parameters.ruby >>-$TAG" | xargs)
             env COMPOSE_TLS_VERSION=TLSv1_2 \
             docker-compose -f .circleci/docker-compose.yml run app install-deps
       - save_cache:
@@ -98,8 +98,8 @@ jobs:
       - run:
           name: Build application Docker image
           command: |
-            TAG=$(echo "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
-            export DOCKER_TAG=v1-ruby-<< parameters.ruby >>-$TAG
+            TAG=$(echo -n "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
+            export DOCKER_TAG=$(echo -n "v1-ruby-<< parameters.ruby >>-$TAG" | xargs)
 
             docker build \
               --cache-from=$CACHE_IMAGE:$DOCKER_TAG \
@@ -110,8 +110,8 @@ jobs:
       - run:
           name: Push to docker hub
           command: |
-            TAG=$(echo "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
-            export DOCKER_TAG=v1-ruby-<< parameters.ruby >>-$TAG
+            TAG=$(echo -n "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
+            export DOCKER_TAG=$(echo -n "v1-ruby-<< parameters.ruby >>-$TAG" | xargs)
             docker push $CACHE_IMAGE:$DOCKER_TAG
 
   install-deps:
@@ -131,7 +131,7 @@ jobs:
           name: Pull build image
           command: |
             TAG=$(echo "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
-            export APP_IMAGE_TAG=zzak/rails-ci:v1-ruby-<< parameters.ruby >>-$TAG
+            export APP_IMAGE_TAG=$(echo -n "zzak/rails-ci:v1-ruby-<< parameters.ruby >>-$TAG" | xargs)
             docker pull $APP_IMAGE_TAG
       - bundle-install:
           ruby: << parameters.ruby >>
@@ -172,7 +172,7 @@ jobs:
           name: Pull build image
           command: |
             TAG=$(echo "$CIRCLE_PROJECT_USER.$CIRCLE_BRANCH" | sha256sum | awk -F "-" '{print $1}')
-            export APP_IMAGE_TAG=zzak/rails-ci:v1-ruby-<< parameters.ruby >>-$TAG
+            export APP_IMAGE_TAG=$(echo -n "zzak/rails-ci:v1-ruby-<< parameters.ruby >>-$TAG" | xargs)
             docker pull $APP_IMAGE_TAG
       - run-tests:
           ruby: << parameters.ruby >>
