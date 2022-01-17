@@ -1,8 +1,7 @@
 #!/bin/sh
 
 echo "--- :bundler: Installing Ruby deps" \
-    && bundle config set deployment 'true' \
-    && rm Gemfile.lock && bundle install -j 8
+    && rm Gemfile.lock && bundle install -j 8 --path vendor/bundle
 
 if [ -f package.json ]; then \
     echo "--- :javascript: Installing JavaScript deps" \
