@@ -135,8 +135,7 @@ jobs:
       - checkout
       - run:
           name: Pull build image
-          command: |
-            docker pull << parameters.tag >>
+          command: docker pull << parameters.tag >>
       - bundle-install:
           ruby: << parameters.ruby >>
           tag: << parameters.tag >>
@@ -175,8 +174,7 @@ jobs:
           ruby: << parameters.ruby >>
       - run:
           name: Pull build image
-          command: |
-            docker pull << parameters.ruby >>
+          command: docker pull << parameters.tag >>
       - run-tests:
           tag: << parameters.tag >>
           gem: << parameters.gem >>
