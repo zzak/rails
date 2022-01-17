@@ -78,14 +78,14 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - gem-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
-            - gem-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}
-            - gem-cache-v1-ruby-<< parameters.ruby >>
+            - gem-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
+            - gem-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}
+            - gem-cache-v2-ruby-<< parameters.ruby >>
       - restore_cache:
           keys:
-            - yarn-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
-            - yarn-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}
-            - yarn-cache-v1-ruby-<< parameters.ruby >>
+            - yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
+            - yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}
+            - yarn-cache-v2-ruby-<< parameters.ruby >>
 
   bundle-install:
     parameters:
@@ -98,11 +98,11 @@ commands:
           name: Bundle install
           command: install-deps
       - save_cache:
-          key: gem-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
+          key: gem-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
           paths:
             - vendor/bundler
       - save_cache:
-          key: yarn-cache-v1-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          key: yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
 
