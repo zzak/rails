@@ -79,7 +79,7 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - gem-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
+            - gem-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile" }}
             - gem-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}
             - gem-cache-v2-ruby-<< parameters.ruby >>
       - restore_cache:
@@ -99,7 +99,7 @@ commands:
           name: Bundle install
           command: install-deps
       - save_cache:
-          key: gem-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
+          key: gem-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile" }}
           paths:
             - vendor/bundler
       - save_cache:
