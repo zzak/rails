@@ -14,8 +14,6 @@ if ! [ -d "$PWD/railties/exe" ]; then
   export PATH="$PATH:$PWD/railties/bin"
 fi
 
-mysql -h 127.0.0.1 -u root mysql < .circleci/mysql-initdb.d/create.sql
-
 echo "+++ $dir: $cmd"
 
 cd $dir
