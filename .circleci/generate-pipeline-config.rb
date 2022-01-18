@@ -46,6 +46,7 @@ executors:
       - image: << parameters.tag >>
       - image: postgres:alpine
         environment:
+          - PGHOST: 127.0.0.1
           - POSTGRES_HOST_AUTH_METHOD: "trust"
       - image: << parameters.mysql >>
         command: "--default-authentication-plugin=mysql_native_password"
@@ -131,11 +132,7 @@ jobs:
       - run:
           name: JavaScript deps
           command: |
-            if [ -f package.json ]; then
-                yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
-            elif [ -f actionview/package.json ]; then
-                (cd actionview && npm install);
-            fi
+            yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
       - run:
           name: Build JavaScript packages
           command: |
@@ -184,10 +181,10 @@ jobs:
 
       MEMCACHE_SERVERS: "memcached:11211"
       MYSQL_HOST: 127.0.0.1
-      PGHOST: postgres
+      PGHOST: 127.0.0.1
       PGUSER: postgres
-      QC_DATABASE_URL: "postgres://postgres@postgres/active_jobs_qc_int_test"
-      QUE_DATABASE_URL: "postgres://postgres@postgres/active_jobs_que_int_test"
+      QC_DATABASE_URL: "postgres://postgres@127.0.0.1/active_jobs_qc_int_test"
+      QUE_DATABASE_URL: "postgres://postgres@127.0.0.1/active_jobs_que_int_test"
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672"
       REDIS_URL: "redis://redis:6379/1"
       SELENIUM_DRIVER_URL: "http://chrome:4444/wd/hub"
@@ -195,7 +192,7 @@ jobs:
       AWAIT_redis: tcp://redis:6379
       AWAIT_memcached: tcp://memcached:11211
       AWAIT_mysql: tcp://127.0.0.1:3306
-      AWAIT_postgres: postgres://postgres@postgres:5432/postgres
+      AWAIT_postgres: postgres://postgres@127.0.0.1:5432/postgres
       AWAIT_rabbitmq: tcp://rabbitmq:5672
       AWAIT_chrome: tcp://chrome:4444
 
@@ -209,6 +206,10 @@ jobs:
             cp tmp/Gemfile.lock.cached Gemfile.lock
             bundle config set --local path 'vendor/bundle'
             bundle install -j 8
+      - run:
+          name: JavaScript deps
+          command: |
+            yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
       - run:
           name: Bundle env
           command: bundle env
