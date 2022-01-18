@@ -143,24 +143,39 @@ commands:
             - yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
             - yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}
             - yarn-cache-v2-ruby-<< parameters.ruby >>
-
-  setup-mysql:
+  retry:
+    parameters:
+      label:
+        type: string
+        default: Step
+      command:
+        type: string
+      max-retries:
+        type: integer
+        default: 3
     steps:
       - run:
-          name: Wait for mysql
+          name: << parameters.label >> with retry
           command: |
-            N=8
+            N=<< parameters.max-retries >>
             while [ $N -gt 0 ]
             do
-              if $(nc -z 127.0.0.1 3306); then
-                echo "Connected to MySQL!"
+              if $(<< parameters.command >>); then
+                echo "Success"
                 exit 0
               fi
-              echo "Not connected; retrying"
+              echo "$N / << parameters.max-retries >>: Failed; retrying"
               N=$(( $N - 1 ))
               sleep 1
             done
             exit 1
+
+  setup-mysql:
+    steps:
+      - retry:
+          label: Wait for mysql
+          max-retries: 8
+          command: nc -z 127.0.0.1 3306
       - run:
           name: Setup mysql databases
           command: |
