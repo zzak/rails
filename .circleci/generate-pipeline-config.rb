@@ -499,7 +499,6 @@ def jobs ruby, tag
           ruby: "#{ruby}"
           tag: #{tag}
           setup-steps:
-            - setup-mysql
             - setup-postgresql
             - setup-rabbitmq
           requires:
