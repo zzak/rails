@@ -137,6 +137,7 @@ jobs:
       - run:
           name: Bundle install
           command: |
+            mkdir -p tmp
             mv Gemfile.lock tmp/Gemfile.lock.updated
             bundle install -j 8 --path vendor/bundle
       - run:
