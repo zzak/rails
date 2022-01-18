@@ -474,7 +474,7 @@ def jobs ruby, tag
           tag: #{tag}
           setup-steps:
             - setup-mysql
-          command: rake db:mysql:build mysql2:test
+          command: rake db:mysql:rebuild mysql2:test
           requires:
             - install-deps
       - test-job:
@@ -485,7 +485,7 @@ def jobs ruby, tag
           tag: #{tag}
           setup-steps:
             - setup-mysql
-          command: rake db:mysql:build mysql2:test
+          command: rake db:mysql:rebuild mysql2:test
           mysql: mariadb:latest
           requires:
             - install-deps
@@ -497,7 +497,7 @@ def jobs ruby, tag
           tag: #{tag}
           setup-steps:
             - setup-mysql
-          command: rake db:mysql:build mysql2:test
+          command: rake db:mysql:rebuild mysql2:test
           mysql_prepared_statements: true
           requires:
             - install-deps
@@ -534,7 +534,7 @@ def jobs ruby, tag
           tag: #{tag}
           setup-steps:
             - setup-mysql
-          command: rake db:mysql:build mysql2:isolated_test
+          command: rake db:mysql:rebuild mysql2:isolated_test
           nodes: 5
           requires:
             - install-deps
