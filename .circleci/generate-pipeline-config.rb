@@ -44,17 +44,86 @@ executors:
         type: string
     docker:
       - image: << parameters.tag >>
-      - image: postgres:alpine
-        environment:
-          - PGHOST: 127.0.0.1
-          - POSTGRES_HOST_AUTH_METHOD: "trust"
+      - image: redis:alpine
+      - image: memcached:alpine
+
+  mysql:
+    parameters:
+      tag:
+        type: string
+      mysql:
+        type: string
+    docker:
+      - image: << parameters.tag >>
       - image: << parameters.mysql >>
         command: "--default-authentication-plugin=mysql_native_password"
         environment:
           - MYSQL_HOST: 127.0.0.1
           - MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       - image: redis:alpine
+      - image: memcached:alpine
+
+  postgresql:
+    parameters:
+      tag:
+        type: string
+      mysql:
+        type: string
+    docker:
+      - image: << parameters.tag >>
+      - image: postgres:alpine
+        environment:
+          - PGHOST: 127.0.0.1
+          - POSTGRES_HOST_AUTH_METHOD: "trust"
+      - image: redis:alpine
+      - image: memcached:alpine
+
+  railties:
+    parameters:
+      tag:
+        type: string
+      mysql:
+        type: string
+    docker:
+      - image: << parameters.tag >>
+      - image: << parameters.mysql >>
+        command: "--default-authentication-plugin=mysql_native_password"
+        environment:
+          - MYSQL_HOST: 127.0.0.1
+          - MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      - image: postgres:alpine
+        environment:
+          - PGHOST: 127.0.0.1
+          - POSTGRES_HOST_AUTH_METHOD: "trust"
+      - image: redis:alpine
+      - image: memcached:alpine
+
+  activejob:
+    parameters:
+      tag:
+        type: string
+      mysql:
+        type: string
+    docker:
+      - image: << parameters.tag >>
+      - image: postgres:alpine
+        environment:
+          - PGHOST: 127.0.0.1
+          - POSTGRES_HOST_AUTH_METHOD: "trust"
+      - image: redis:alpine
       - image: rabbitmq:alpine
+      - image: memcached:alpine
+      # - beanstalkd
+
+  actionview:
+    parameters:
+      tag:
+        type: string
+      mysql:
+        type: string
+    docker:
+      - image: << parameters.tag >>
+      - image: redis:alpine
       - image: memcached:alpine
       - image: selenium/standalone-chrome:latest
 
@@ -152,6 +221,9 @@ jobs:
 
   test-job:
     parameters:
+      exe:
+        type: string
+        default: default
       gem:
         type: string
       command:
@@ -171,7 +243,7 @@ jobs:
         type: integer
         default: 1
     executor:
-      name: default
+      name: << parameters.exe >>
       mysql: << parameters.mysql >>
       tag: << parameters.tag >>
     resource_class: large
@@ -290,6 +362,7 @@ def jobs ruby, tag
       - test-job:
           name: actionview
           gem: actionview
+          exe: actionview
           ruby: "#{ruby}"
           tag: #{tag}
           requires:
@@ -297,6 +370,7 @@ def jobs ruby, tag
       - test-job:
           name: actionview-ujs
           gem: actionview
+          exe: actionview
           ruby: "#{ruby}"
           tag: #{tag}
           command: rake test:ujs
@@ -326,6 +400,7 @@ def jobs ruby, tag
       - test-job:
           name: activejob
           gem: activejob
+          exe: activejob
           ruby: "#{ruby}"
           tag: #{tag}
           requires:
@@ -340,6 +415,7 @@ def jobs ruby, tag
       - test-job:
           name: railties
           gem: railties
+          exe: railties
           ruby: "#{ruby}"
           tag: #{tag}
           nodes: 12
@@ -348,6 +424,7 @@ def jobs ruby, tag
       - test-job:
           name: activerecord-mysql2
           gem: activerecord
+          exe: mysql
           ruby: "#{ruby}"
           tag: #{tag}
           command: rake db:mysql:rebuild mysql2:test
@@ -356,6 +433,7 @@ def jobs ruby, tag
       - test-job:
           name: activrecord-mysql2-mariadb
           gem: activerecord
+          exe: mysql
           ruby: "#{ruby}"
           tag: #{tag}
           command: rake db:mysql:rebuild mysql2:test
@@ -365,6 +443,7 @@ def jobs ruby, tag
       - test-job:
           name: activrecord-mysql2-prepared-statements
           gem: activerecord
+          exe: mysql
           ruby: "#{ruby}"
           tag: #{tag}
           command: rake db:mysql:rebuild mysql2:test
@@ -374,6 +453,7 @@ def jobs ruby, tag
       - test-job:
           name: activerecord-postgresql
           gem: activerecord
+          exe: postgresql
           ruby: "#{ruby}"
           tag: #{tag}
           command: rake db:postgresql:rebuild postgresql:test
@@ -398,6 +478,7 @@ def jobs ruby, tag
       - test-job:
           name: activrecord-mysql2-isolated
           gem: activerecord
+          exe: mysql
           ruby: "#{ruby}"
           tag: #{tag}
           command: rake db:mysql:rebuild mysql2:isolated_test
@@ -407,6 +488,7 @@ def jobs ruby, tag
       - test-job:
           name: activerecord-postgresql-isolated
           gem: activerecord
+          exe: postgresql
           ruby: "#{ruby}"
           tag: #{tag}
           command: rake db:postgresql:rebuild postgresql:isolated_test
@@ -441,6 +523,7 @@ def jobs ruby, tag
       - test-job:
           name: actionview-isolated
           gem: actionview
+          exe: actionview
           ruby: "#{ruby}"
           tag: #{tag}
           command: rake test:isolated
@@ -449,6 +532,7 @@ def jobs ruby, tag
       - test-job:
           name: activejob-isolated
           gem: activejob
+          exe: activejob
           ruby: "#{ruby}"
           tag: #{tag}
           command: rake test:isolated
