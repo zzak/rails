@@ -38,6 +38,9 @@ connections:
   mysql2:
     arunit:
       username: rails
+<% if ENV['CIRCLECI'] %>
+      password: rails
+<% end %>
       encoding: utf8mb4
       collation: utf8mb4_unicode_ci
 <% if ENV['MYSQL_PREPARED_STATEMENTS'] and ENV['MYSQL_PREPARED_STATEMENTS'] == "true" %>
@@ -53,6 +56,9 @@ connections:
 <% end %>
     arunit2:
       username: rails
+<% if ENV['CIRCLECI'] %>
+      password: rails
+<% end %>
       encoding: utf8mb4
       collation: utf8mb4_general_ci
 <% if ENV['MYSQL_PREPARED_STATEMENTS'] %>
