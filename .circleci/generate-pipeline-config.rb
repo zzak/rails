@@ -60,6 +60,7 @@ executors:
         environment:
           - MYSQL_HOST: 127.0.0.1
           - MYSQL_USER: rails
+          - MYSQL_PASSWORD: ""
           - MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       - image: redis:alpine
       - image: memcached:alpine
@@ -92,6 +93,7 @@ executors:
         environment:
           - MYSQL_HOST: 127.0.0.1
           - MYSQL_USER: rails
+          - MYSQL_PASSWORD: ""
           - MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       - image: postgres:alpine
         environment:
