@@ -59,7 +59,8 @@ executors:
         command: "--default-authentication-plugin=mysql_native_password"
         environment:
           - MYSQL_HOST: 127.0.0.1
-          - MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          - MYSQL_USER: rails
+          - MYSQL_PASSWORD: ""
       - image: redis:alpine
       - image: memcached:alpine
 
@@ -90,7 +91,8 @@ executors:
         command: "--default-authentication-plugin=mysql_native_password"
         environment:
           - MYSQL_HOST: 127.0.0.1
-          - MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          - MYSQL_USER: rails
+          - MYSQL_PASSWORD: ""
       - image: postgres:alpine
         environment:
           - PGHOST: 127.0.0.1
