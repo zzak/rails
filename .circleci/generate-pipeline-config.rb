@@ -59,8 +59,6 @@ executors:
         command: "--default-authentication-plugin=mysql_native_password"
         environment:
           - MYSQL_HOST: 127.0.0.1
-          - MYSQL_USER: rails
-          - MYSQL_PASSWORD: rails
           - MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       - image: redis:alpine
       - image: memcached:alpine
@@ -92,8 +90,6 @@ executors:
         command: "--default-authentication-plugin=mysql_native_password"
         environment:
           - MYSQL_HOST: 127.0.0.1
-          - MYSQL_USER: rails
-          - MYSQL_PASSWORD: rails
           - MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       - image: postgres:alpine
         environment:
@@ -147,6 +143,32 @@ commands:
             - yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
             - yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}
             - yarn-cache-v2-ruby-<< parameters.ruby >>
+
+  setup-mysql:
+    steps:
+      - run:
+          name: Wait for mysql
+          command: |
+            N=8
+            while [ $N -gt 0 ]
+            do
+              if $(nc -z 127.0.0.1 3306); then
+                echo "Connected to MySQL!"
+                exit 0
+              fi
+              echo "Not connected; retrying"
+              N=$(( $N - 1 ))
+              sleep 1
+            done
+            exit 1
+      - run:
+          name: Setup mysql databases
+          command: |
+            mysql -h 127.0.0.1 -u root < .circleci/mysql-initdb.d/create.sql
+      - run:
+          name: Validate mysql database is setup
+          command: |
+            mysql -h 127.0.0.1 -u rails -D activerecord_unittest -e "SHOW TABLES;"
 
 jobs:
   build-image:
@@ -236,6 +258,9 @@ jobs:
       mysql:
         type: string
         default: mysql:latest
+      setup-steps:
+        type: steps
+        default: []
       mysql_prepared_statements:
         type: boolean
         default: false
@@ -290,6 +315,7 @@ jobs:
           name: Bundle env
           command: bundle env
       - run: await-all
+      - steps: << parameters.setup-steps >>
       - run:
           name: Run tests
           command: cd << parameters.gem >> && bundle exec "<< parameters.command >>"
@@ -431,6 +457,8 @@ def jobs ruby, tag
           exe: mysql
           ruby: "#{ruby}"
           tag: #{tag}
+          setup-steps:
+            - setup-mysql
           command: rake db:mysql:build mysql2:test
           requires:
             - install-deps
@@ -440,6 +468,8 @@ def jobs ruby, tag
           exe: mysql
           ruby: "#{ruby}"
           tag: #{tag}
+          setup-steps:
+            - setup-mysql
           command: rake db:mysql:build mysql2:test
           mysql: mariadb:latest
           requires:
@@ -450,6 +480,8 @@ def jobs ruby, tag
           exe: mysql
           ruby: "#{ruby}"
           tag: #{tag}
+          setup-steps:
+            - setup-mysql
           command: rake db:mysql:build mysql2:test
           mysql_prepared_statements: true
           requires:
@@ -485,6 +517,8 @@ def jobs ruby, tag
           exe: mysql
           ruby: "#{ruby}"
           tag: #{tag}
+          setup-steps:
+            - setup-mysql
           command: rake db:mysql:build mysql2:isolated_test
           nodes: 5
           requires:
