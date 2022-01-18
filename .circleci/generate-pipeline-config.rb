@@ -331,8 +331,8 @@ jobs:
           command: bundle env
       - run: await-all
       - steps: << parameters.setup-steps >>
-      - run:
-          name: Run tests
+      - retry:
+          label: Run tests
           command: cd << parameters.gem >> && bundle exec "<< parameters.command >>"
       - store_test_results:
           path: test-reports
