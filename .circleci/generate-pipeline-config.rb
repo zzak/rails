@@ -79,9 +79,9 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - gem-cache-v4-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile" }}
-            - gem-cache-v4-ruby-<< parameters.ruby >>-{{ .Branch }}
-            - gem-cache-v4-ruby-<< parameters.ruby >>
+            - gem-cache-v6-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "tmp/Gemfile.lock.old" }}
+            - gem-cache-v6-ruby-<< parameters.ruby >>-{{ .Branch }}
+            - gem-cache-v6-ruby-<< parameters.ruby >>
       - restore_cache:
           keys:
             - yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
@@ -138,8 +138,9 @@ jobs:
           name: Bundle install
           command: |
             mkdir -p tmp
-            mv Gemfile.lock tmp/Gemfile.lock.updated
+            mv Gemfile.lock tmp/Gemfile.lock.old
             bundle install -j 8 --path vendor/bundle
+            cp Gemfile.lock tmp/Gemfile.lock.cached
       - run:
           name: JavaScript deps
           command: |
@@ -156,10 +157,10 @@ jobs:
                 (cd railties/test/isolation/assets && yarn install --frozen-lockfile --cache-folder ~/.cache/yarn);
             fi
       - save_cache:
-          key: gem-cache-v4-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile" }}
+          key: gem-cache-v6-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "tmp/Gemfile.lock.old" }}
           paths:
             - ~/project/vendor/bundler
-            - ~/project/tmp/Gemfile.lock.updated
+            - ~/project/tmp/Gemfile.lock.cached
       - save_cache:
           key: yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
           paths:
@@ -218,7 +219,7 @@ jobs:
       - run:
           name: Bundle install
           command: |
-            mv tmp/Gemfile.lock.updated Gemfile.lock
+            mv tmp/Gemfile.lock.cached Gemfile.lock
             bundle install -j 8 --path vendor/bundle
       - run: await-all
       - run-tests:
