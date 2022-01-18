@@ -68,9 +68,7 @@ commands:
     steps:
       - run:
           name: Run tests
-          command: |
-            set +e
-            .circleci/with-retry.sh runner << parameters.gem >> "<< parameters.command >>"
+          command: runner << parameters.gem >> "<< parameters.command >>"
 
   bundle-restore:
     parameters:
@@ -139,7 +137,8 @@ jobs:
           command: |
             mkdir -p tmp
             mv Gemfile.lock tmp/Gemfile.lock.old
-            bundle install -j 8 --path vendor/bundle
+            bundle config set --local path '$CIRCLE_WORKING_DIRECTORY/vendor/bundle'
+            bundle install -j 8
             cp Gemfile.lock tmp/Gemfile.lock.cached
       - run:
           name: JavaScript deps
@@ -219,8 +218,9 @@ jobs:
       - run:
           name: Bundle install
           command: |
-            mv tmp/Gemfile.lock.cached Gemfile.lock
-            bundle install -j 8 --path vendor/bundle
+            cp tmp/Gemfile.lock.cached Gemfile.lock
+            bundle config set --local path '$CIRCLE_WORKING_DIRECTORY/vendor/bundle'
+            bundle install -j 8
       - run: await-all
       - run-tests:
           gem: << parameters.gem >>
