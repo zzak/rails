@@ -215,11 +215,7 @@ jobs:
       - run: await-all
       - run:
           name: Run tests
-          command: |
-            set +e
-            .circleci/with-retry.sh \
-              (cd << parameters.gem >> && \
-                bundle exec "<< parameters.command >>")
+          command: cd << parameters.gem >> && bundle exec "<< parameters.command >>"
       - store_test_results:
           path: test-reports
       - store_artifacts:
