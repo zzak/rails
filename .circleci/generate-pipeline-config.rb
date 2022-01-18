@@ -170,12 +170,57 @@ commands:
             done
             exit 1
 
-  setup-mysql:
+  wait-for:
+    parameters:
+      host:
+        type: string
+        default: 127.0.0.1
+      port:
+        type: integer
+      service:
+        type: string
+        default: service
     steps:
       - retry:
-          label: Wait for mysql
+          label: Wait for << parameters.service >>
           max-retries: 8
-          command: nc -z 127.0.0.1 3306
+          command: nc -z << parameters.host >> << parameters.port >>
+
+  setup-redis:
+    steps:
+      - wait-for:
+          service: redis
+          port: 6379
+
+  setup-memcached:
+    steps:
+      - wait-for:
+          service: memcached
+          port: 11211
+
+  setup-postgresql:
+    steps:
+      - wait-for:
+          service: postgresql
+          port: 5432
+
+  setup-rabbitmq:
+    steps:
+      - wait-for:
+          service: rabbitmq
+          port: 5672
+
+  setup-chrome:
+    steps:
+      - wait-for:
+          service: chrome
+          port: 4444
+
+  setup-mysql:
+    steps:
+      - wait-for:
+          service: mysql
+          port: 3306
       - run:
           name: Setup mysql databases
           command: |
@@ -305,13 +350,6 @@ jobs:
       REDIS_URL: "redis://127.0.0.1:6379/1"
       SELENIUM_DRIVER_URL: "http://127.0.0.1:4444/wd/hub"
 
-      AWAIT_redis: tcp://127.0.0.1:6379
-      AWAIT_memcached: tcp://127.0.0.1:11211
-      AWAIT_mysql: tcp://127.0.0.1:3306
-      AWAIT_postgres: postgres://postgres@127.0.0.1:5432/postgres
-      AWAIT_rabbitmq: tcp://127.0.0.1:5672
-      AWAIT_chrome: tcp://127.0.0.1:4444
-
     steps:
       - checkout
       - bundle-restore:
@@ -329,7 +367,8 @@ jobs:
       - run:
           name: Bundle env
           command: bundle env
-      - run: await-all
+      - setup-redis
+      - setup-memcached
       - steps: << parameters.setup-steps >>
       - retry:
           label: Run tests
@@ -410,6 +449,8 @@ def jobs ruby, tag
           exe: actionview
           ruby: "#{ruby}"
           tag: #{tag}
+          setup-steps:
+            - setup-chrome
           requires:
             - install-deps
       - test-job:
@@ -418,6 +459,8 @@ def jobs ruby, tag
           exe: actionview
           ruby: "#{ruby}"
           tag: #{tag}
+          setup-steps:
+            - setup-chrome
           command: rake test:ujs
           requires:
             - install-deps
@@ -448,6 +491,10 @@ def jobs ruby, tag
           exe: activejob
           ruby: "#{ruby}"
           tag: #{tag}
+          setup-steps:
+            - setup-mysql
+            - setup-postgresql
+            - setup-rabbitmq
           requires:
             - install-deps
       - test-job:
@@ -463,6 +510,9 @@ def jobs ruby, tag
           exe: railties
           ruby: "#{ruby}"
           tag: #{tag}
+          setup-steps:
+            - setup-mysql
+            - setup-postgresql
           nodes: 12
           requires:
             - install-deps
@@ -507,6 +557,8 @@ def jobs ruby, tag
           exe: postgresql
           ruby: "#{ruby}"
           tag: #{tag}
+          setup-steps:
+            - setup-postgresql
           command: rake db:postgresql:rebuild postgresql:test
           requires:
             - install-deps
@@ -544,6 +596,8 @@ def jobs ruby, tag
           exe: postgresql
           ruby: "#{ruby}"
           tag: #{tag}
+          setup-steps:
+            - setup-postgresql
           command: rake db:postgresql:rebuild postgresql:isolated_test
           nodes: 5
           requires:
@@ -579,6 +633,8 @@ def jobs ruby, tag
           exe: actionview
           ruby: "#{ruby}"
           tag: #{tag}
+          setup-steps:
+            - setup-chrome
           command: rake test:isolated
           requires:
             - install-deps
@@ -588,6 +644,10 @@ def jobs ruby, tag
           exe: activejob
           ruby: "#{ruby}"
           tag: #{tag}
+          setup-steps:
+            - setup-mysql
+            - setup-postgresql
+            - setup-rabbitmq
           command: rake test:isolated
           requires:
             - install-deps

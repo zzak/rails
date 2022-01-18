@@ -89,9 +89,6 @@ RUN echo "--- :ruby: Updating RubyGems and Bundler" \
         postgresql-client default-mysql-client sqlite3 \
         git nodejs yarn lsof netcat \
         ffmpeg mupdf mupdf-tools poppler-utils \
-    # await (for waiting on dependent services)
-    && curl -fLsS -o /tmp/await-linux-amd64 https://github.com/betalo-sweden/await/releases/download/v0.4.0/await-linux-amd64 \
-    && install /tmp/await-linux-amd64 /usr/local/bin/await \
     # clean up
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* \
@@ -100,8 +97,5 @@ RUN echo "--- :ruby: Updating RubyGems and Bundler" \
 WORKDIR /rails
 ENV RAILS_ENV=test RACK_ENV=test
 ENV JRUBY_OPTS="--dev -J-Xmx1024M"
-
-ADD .circleci/await-all .circleci/runner .circleci/install-deps /usr/local/bin/
-RUN chmod +x /usr/local/bin/await-all /usr/local/bin/runner /usr/local/bin/install-deps
 
 ADD . ./
