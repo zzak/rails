@@ -87,7 +87,7 @@ RUN echo "--- :ruby: Updating RubyGems and Bundler" \
     #  specific dependencies for the rails build
     && apt-get install -y --no-install-recommends \
         postgresql-client default-mysql-client sqlite3 \
-        git nodejs yarn lsof \
+        git nodejs yarn lsof netcat \
         ffmpeg mupdf mupdf-tools poppler-utils \
     # await (for waiting on dependent services)
     && curl -fLsS -o /tmp/await-linux-amd64 https://github.com/betalo-sweden/await/releases/download/v0.4.0/await-linux-amd64 \
