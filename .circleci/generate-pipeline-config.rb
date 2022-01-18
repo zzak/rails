@@ -370,8 +370,8 @@ jobs:
       - setup-redis
       - setup-memcached
       - steps: << parameters.setup-steps >>
-      - retry:
-          label: Run tests
+      - run:
+          name: Run tests
           command: cd << parameters.gem >> && bundle exec "<< parameters.command >>"
       - store_test_results:
           path: test-reports
