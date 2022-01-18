@@ -79,9 +79,9 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - gem-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile" }}
-            - gem-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}
-            - gem-cache-v2-ruby-<< parameters.ruby >>
+            - gem-cache-v3-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile" }}
+            - gem-cache-v3-ruby-<< parameters.ruby >>-{{ .Branch }}
+            - gem-cache-v3-ruby-<< parameters.ruby >>
       - restore_cache:
           keys:
             - yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
@@ -105,7 +105,7 @@ commands:
         type: string
     steps:
       - save_cache:
-          key: gem-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile" }}
+          key: gem-cache-v3-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile" }}
           paths:
             - ~/project/vendor/bundler
       - save_cache:
@@ -212,8 +212,9 @@ jobs:
       - checkout
       - bundle-restore:
           ruby: << parameters.ruby >>
-      - bundle-install:
-          ruby: << parameters.ruby >>
+      - run:
+          name: Bundle install
+          command: install-deps
       - run: await-all
       - run-tests:
           gem: << parameters.gem >>
