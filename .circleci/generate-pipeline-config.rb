@@ -217,6 +217,10 @@ commands:
           port: 4444
 
   setup-mysql:
+    parameters:
+      prepared_statements:
+        type: boolean
+        default: false
     steps:
       - wait-for:
           service: mysql
@@ -229,6 +233,14 @@ commands:
           name: Validate mysql database is setup
           command: |
             mysql -h 127.0.0.1 -u rails -D activerecord_unittest -e "SHOW TABLES;"
+      - when:
+          condition: << parameters.prepared_statements >>
+          steps:
+            - run:
+                name: Update prepared statements if necessary
+                command: |
+                  echo 'export MYSQL_PREPARED_STATEMENTS=true' >> $BASH_ENV
+                  source $BASH_ENV
 
 jobs:
   build-image:
@@ -321,9 +333,6 @@ jobs:
       setup-steps:
         type: steps
         default: []
-      mysql_prepared_statements:
-        type: boolean
-        default: false
       ruby:
         type: string
       tag:
@@ -338,8 +347,6 @@ jobs:
     resource_class: large
     parallelism: << parameters.nodes >>
     environment:
-      MYSQL_PREPARED_STATEMENTS: << parameters.mysql_prepared_statements >>
-
       MEMCACHE_SERVERS: "127.0.0.1:11211"
       MYSQL_HOST: 127.0.0.1
       PGHOST: 127.0.0.1
@@ -546,9 +553,9 @@ def jobs ruby, tag
           ruby: "#{ruby}"
           tag: #{tag}
           setup-steps:
-            - setup-mysql
+            - setup-mysql:
+              prepared_statements: true
           command: rake db:mysql:rebuild mysql2:test
-          mysql_prepared_statements: true
           requires:
             - install-deps
       - test-job:
