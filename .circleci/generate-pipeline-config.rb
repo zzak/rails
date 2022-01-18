@@ -136,7 +136,24 @@ jobs:
           ruby: << parameters.ruby >>
       - run:
           name: Bundle install
-          command: install-deps
+          command: |
+            mv Gemfile.lock tmp/Gemfile.lock.updated
+            bundle install -j 8 --path vendor/bundle
+      - run:
+          name: JavaScript deps
+          command: |
+            if [ -f package.json ]; then
+                yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+            elif [ -f actionview/package.json ]; then
+                (cd actionview && npm install);
+            fi
+      - run:
+          name: Build JavaScript packages
+          command: |
+            (cd actionview && yarn build)
+            if [ -f railties/test/isolation/assets/package.json ]; then
+                (cd railties/test/isolation/assets && yarn install --frozen-lockfile --cache-folder ~/.cache/yarn);
+            fi
       - save_cache:
           key: gem-cache-v4-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile" }}
           paths:
