@@ -251,22 +251,22 @@ jobs:
     environment:
       MYSQL_PREPARED_STATEMENTS: << parameters.mysql_prepared_statements >>
 
-      MEMCACHE_SERVERS: "memcached:11211"
+      MEMCACHE_SERVERS: "127.0.0.1:11211"
       MYSQL_HOST: 127.0.0.1
       PGHOST: 127.0.0.1
       PGUSER: postgres
       QC_DATABASE_URL: "postgres://postgres@127.0.0.1/active_jobs_qc_int_test"
       QUE_DATABASE_URL: "postgres://postgres@127.0.0.1/active_jobs_que_int_test"
-      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672"
-      REDIS_URL: "redis://redis:6379/1"
-      SELENIUM_DRIVER_URL: "http://chrome:4444/wd/hub"
+      RABBITMQ_URL: "amqp://guest:guest@127.0.0.1:5672"
+      REDIS_URL: "redis://127.0.0.1:6379/1"
+      SELENIUM_DRIVER_URL: "http://127.0.0.1:4444/wd/hub"
 
-      AWAIT_redis: tcp://redis:6379
-      AWAIT_memcached: tcp://memcached:11211
+      AWAIT_redis: tcp://127.0.0.1:6379
+      AWAIT_memcached: tcp://127.0.0.1:11211
       AWAIT_mysql: tcp://127.0.0.1:3306
       AWAIT_postgres: postgres://postgres@127.0.0.1:5432/postgres
-      AWAIT_rabbitmq: tcp://rabbitmq:5672
-      AWAIT_chrome: tcp://chrome:4444
+      AWAIT_rabbitmq: tcp://127.0.0.1:5672
+      AWAIT_chrome: tcp://127.0.0.1:4444
 
     steps:
       - checkout
