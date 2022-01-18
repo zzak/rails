@@ -79,9 +79,9 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - gem-cache-v6-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "tmp/Gemfile.lock.old" }}
-            - gem-cache-v6-ruby-<< parameters.ruby >>-{{ .Branch }}
-            - gem-cache-v6-ruby-<< parameters.ruby >>
+            - gem-cache-v7-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
+            - gem-cache-v7-ruby-<< parameters.ruby >>-{{ .Branch }}
+            - gem-cache-v7-ruby-<< parameters.ruby >>
       - restore_cache:
           keys:
             - yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
@@ -157,7 +157,7 @@ jobs:
                 (cd railties/test/isolation/assets && yarn install --frozen-lockfile --cache-folder ~/.cache/yarn);
             fi
       - save_cache:
-          key: gem-cache-v6-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "tmp/Gemfile.lock.old" }}
+          key: gem-cache-v7-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "tmp/Gemfile.lock.old" }}
           paths:
             - ~/project/vendor/bundler
             - ~/project/tmp/Gemfile.lock.cached
