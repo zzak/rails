@@ -68,7 +68,9 @@ commands:
     steps:
       - run:
           name: Run tests
-          command: runner << parameters.gem >> "<< parameters.command >>"
+          command: |
+            set +e
+            .circleci/with-retry.sh runner << parameters.gem >> "<< parameters.command >>"
 
   bundle-restore:
     parameters:
@@ -77,9 +79,9 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - gem-cache-v7-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
-            - gem-cache-v7-ruby-<< parameters.ruby >>-{{ .Branch }}
-            - gem-cache-v7-ruby-<< parameters.ruby >>
+            - gem-cache-v8-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile.lock" }}
+            - gem-cache-v8-ruby-<< parameters.ruby >>-{{ .Branch }}
+            - gem-cache-v8-ruby-<< parameters.ruby >>
       - restore_cache:
           keys:
             - yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
@@ -137,7 +139,7 @@ jobs:
           command: |
             mkdir -p tmp
             mv Gemfile.lock tmp/Gemfile.lock.old
-            bundle config set --local path '$CIRCLE_WORKING_DIRECTORY/vendor/bundle'
+            bundle config set --local path 'vendor/bundle'
             bundle install -j 8
             cp Gemfile.lock tmp/Gemfile.lock.cached
       - run:
@@ -156,9 +158,9 @@ jobs:
                 (cd railties/test/isolation/assets && yarn install --frozen-lockfile --cache-folder ~/.cache/yarn);
             fi
       - save_cache:
-          key: gem-cache-v7-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "tmp/Gemfile.lock.old" }}
+          key: gem-cache-v8-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "tmp/Gemfile.lock.old" }}
           paths:
-            - ~/project/vendor/bundler
+            - ~/project/vendor/bundle
             - ~/project/tmp/Gemfile.lock.cached
       - save_cache:
           key: yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
@@ -219,7 +221,7 @@ jobs:
           name: Bundle install
           command: |
             cp tmp/Gemfile.lock.cached Gemfile.lock
-            bundle config set --local path '$CIRCLE_WORKING_DIRECTORY/vendor/bundle'
+            bundle config set --local path 'vendor/bundle'
             bundle install -j 8
       - run: await-all
       - run-tests:
