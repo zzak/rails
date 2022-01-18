@@ -79,39 +79,14 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - gem-cache-v3-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile" }}
-            - gem-cache-v3-ruby-<< parameters.ruby >>-{{ .Branch }}
-            - gem-cache-v3-ruby-<< parameters.ruby >>
+            - gem-cache-v4-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile" }}
+            - gem-cache-v4-ruby-<< parameters.ruby >>-{{ .Branch }}
+            - gem-cache-v4-ruby-<< parameters.ruby >>
       - restore_cache:
           keys:
             - yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
             - yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}
             - yarn-cache-v2-ruby-<< parameters.ruby >>
-
-  bundle-install:
-    parameters:
-      ruby:
-        type: string
-    steps:
-      - bundle-restore:
-          ruby: << parameters.ruby >>
-      - run:
-          name: Bundle install
-          command: install-deps
-
-  save-cache:
-    parameters:
-      ruby:
-        type: string
-    steps:
-      - save_cache:
-          key: gem-cache-v3-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile" }}
-          paths:
-            - ~/project/vendor/bundler
-      - save_cache:
-          key: yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
-          paths:
-            - ~/.cache/yarn
 
 jobs:
   build-image:
@@ -157,10 +132,20 @@ jobs:
       tag: << parameters.tag >>
     steps:
       - checkout
-      - bundle-install:
+      - bundle-restore:
           ruby: << parameters.ruby >>
-      - save-cache:
-          ruby: << parameters.ruby >>
+      - run:
+          name: Bundle install
+          command: install-deps
+      - save_cache:
+          key: gem-cache-v4-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "Gemfile" }}
+          paths:
+            - ~/project/vendor/bundler
+            - ~/project/tmp/Gemfile.lock.updated
+      - save_cache:
+          key: yarn-cache-v2-ruby-<< parameters.ruby >>-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
 
   test-job:
     parameters:
@@ -214,7 +199,9 @@ jobs:
           ruby: << parameters.ruby >>
       - run:
           name: Bundle install
-          command: install-deps
+          command: |
+            mv tmp/Gemfile.lock.updated Gemfile.lock
+            bundle install -j 8 --path vendor/bundle
       - run: await-all
       - run-tests:
           gem: << parameters.gem >>
