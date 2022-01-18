@@ -58,20 +58,6 @@ executors:
       - image: selenium/standalone-chrome:latest
 
 commands:
-  run-tests:
-    parameters:
-      gem:
-        type: string
-      command:
-        type: string
-        default: rake test
-    steps:
-      - run:
-          name: Run tests
-          command: |
-            set +e
-            .circleci/with-retry.sh runner << parameters.gem >> "<< parameters.command >>"
-
   bundle-restore:
     parameters:
       ruby:
@@ -223,10 +209,17 @@ jobs:
             cp tmp/Gemfile.lock.cached Gemfile.lock
             bundle config set --local path 'vendor/bundle'
             bundle install -j 8
+      - run:
+          name: Bundle env
+          command: bundle env
       - run: await-all
-      - run-tests:
-          gem: << parameters.gem >>
-          command: << parameters.command >>
+      - run:
+          name: Run tests
+          command: |
+            set +e
+            .circleci/with-retry.sh \
+              (cd << parameters.gem >> && \
+                bundle exec "<< parameters.command >>")
       - store_test_results:
           path: test-reports
       - store_artifacts:
