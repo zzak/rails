@@ -215,13 +215,54 @@ class MiddlewareStackTest < ActiveSupport::TestCase
     assert_equal true, @stack.include?(ActionDispatch::MiddlewareStack::Middleware.new(BarMiddleware, nil, nil))
   end
 
-  test "referencing Rack::Sendfile is deprecated but still valid" do
+  test "referencing Rack::Sendfile via #insert_before is deprecated but still valid" do
+    @stack.use ActionDispatch::MiddlewareStack::FakeSendfile
+
+    assert_deprecated(/Rack::Sendfile is removed from the default middleware stack in Rails/) do
+      @stack.insert_before(Rack::Sendfile, BazMiddleware)
+    end
+    assert_equal BazMiddleware, @stack[2].klass
+  end
+
+  test "referencing Rack::Sendfile via #insert_after is deprecated but still valid" do
     @stack.use ActionDispatch::MiddlewareStack::FakeSendfile
 
     assert_deprecated(/Rack::Sendfile is removed from the default middleware stack in Rails/) do
       @stack.insert_after(Rack::Sendfile, BazMiddleware)
     end
     assert_equal BazMiddleware, @stack[3].klass
+  end
+
+  test "referencing Rack::Sendfile via #swap is deprecated but still valid" do
+    @stack.use ActionDispatch::MiddlewareStack::FakeSendfile
+
+    assert_equal ActionDispatch::MiddlewareStack::FakeSendfile, @stack[2].klass
+    assert_deprecated(/Rack::Sendfile is removed from the default middleware stack in Rails/) do
+      @stack.swap(Rack::Sendfile, BazMiddleware)
+    end
+    assert_equal BazMiddleware, @stack[2].klass
+  end
+
+  test "referencing Rack::Sendfile via #move_before is deprecated but still valid" do
+    @stack.use ActionDispatch::MiddlewareStack::FakeSendfile
+
+    assert_deprecated(/Rack::Sendfile is removed from the default middleware stack in Rails/) do
+      @stack.move_before(Rack::Sendfile, FooMiddleware)
+    end
+    assert_equal BarMiddleware, @stack[0].klass
+    assert_equal FooMiddleware, @stack[1].klass
+    assert_equal ActionDispatch::MiddlewareStack::FakeSendfile, @stack[2].klass
+  end
+
+  test "referencing Rack::Sendfile via #move_after is deprecated but still valid" do
+    @stack.insert_after(FooMiddleware, ActionDispatch::MiddlewareStack::FakeSendfile)
+
+    assert_deprecated(/Rack::Sendfile is removed from the default middleware stack in Rails/) do
+      @stack.move_after(Rack::Sendfile, FooMiddleware)
+    end
+    assert_equal ActionDispatch::MiddlewareStack::FakeSendfile, @stack[0].klass
+    assert_equal FooMiddleware, @stack[1].klass
+    assert_equal BarMiddleware, @stack[2].klass
   end
 
   test "referencing Rack::Sendfile is not deprecated when added explicitly" do
