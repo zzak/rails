@@ -23,10 +23,13 @@ module ApplicationTests
       end
     end
 
-    # x_sendfile_header middleware deprecated
     test "config.action_dispatch.x_sendfile_header cannot be set" do
       make_basic_app do |app|
-        app.config.action_dispatch.x_sendfile_header = "X-Sendfile"
+        assert_deprecated(/`config.action_dispatch.x_sendfile_header` is deprecated/) do
+          app.config.action_dispatch.x_sendfile_header = "X-Sendfile"
+        end
+
+        assert_nil app.config.action_dispatch.x_sendfile_header
       end
 
       simple_controller
