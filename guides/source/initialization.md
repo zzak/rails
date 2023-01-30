@@ -513,10 +513,10 @@ require "rails"
   action_text/engine
   rails/test_unit/railtie
 ).each do |railtie|
-  begin
+
     require railtie
   rescue LoadError
-  end
+
 end
 ```
 
