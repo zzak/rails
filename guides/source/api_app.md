@@ -411,13 +411,15 @@ controller modules by default:
 - `AbstractController::Callbacks`: Support for `before_action` and
   similar helpers.
 - `ActionController::Rescue`: Support for `rescue_from`.
-- `ActionController::Instrumentation`: Support for the instrumentation
-  hooks defined by Action Controller (see [the instrumentation
-  guide](active_support_instrumentation.html#action-controller) for
-more information regarding this).
-- `ActionController::ParamsWrapper`: Wraps the parameters hash into a nested hash,
-  so that you don't have to specify root elements sending POST requests for instance.
-- `ActionController::Head`: Support for returning a response with no content, only headers.
+- `ActionController::Instrumentation`: Support for the instrumentation hooks
+  defined by Action Controller (see [the instrumentation
+  guide](active_support_instrumentation.html#action-controller) for more
+  information regarding this).
+- `ActionController::ParamsWrapper`: Wraps the parameters hash into a nested
+  hash, so that you don't have to specify root elements sending POST requests
+  for instance.
+- `ActionController::Head`: Support for returning a response with no content,
+  only headers.
 
 Other plugins may add additional modules. You can get a list of all modules
 included into `ActionController::API` in the rails console:
@@ -451,8 +453,9 @@ Some common modules you might want to add:
 - `ActionController::MimeResponds`: Support for `respond_to`.
 - `ActionController::Cookies`: Support for `cookies`, which includes
   support for signed and encrypted cookies. This requires the cookies middleware.
-- `ActionController::Caching`: Support view caching for the API controller. Please note
-  that you will need to manually specify the cache store inside the controller like this:
+- `ActionController::Caching`: Support view caching for the API controller.
+  Please note that you will need to manually specify the cache store inside the
+  controller like this:
 
     ```ruby
     class ApplicationController < ActionController::API
@@ -460,7 +463,8 @@ Some common modules you might want to add:
       self.cache_store = :mem_cache_store
     end
     ```
-  Rails does *not* pass this configuration automatically.
+
+    Rails does *not* pass this configuration automatically.
 
 The best place to add a module is in your `ApplicationController`, but you can
 also add modules to individual controllers.
