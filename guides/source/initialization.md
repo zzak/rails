@@ -499,6 +499,7 @@ require "rails/all"
 This file is responsible for requiring all the individual frameworks of Rails:
 
 ```ruby
+# rubocop:disable Style/RedundantBegin
 require "rails"
 
 %w(
@@ -513,10 +514,10 @@ require "rails"
   action_text/engine
   rails/test_unit/railtie
 ).each do |railtie|
-
+  begin
     require railtie
   rescue LoadError
-
+  end
 end
 ```
 
