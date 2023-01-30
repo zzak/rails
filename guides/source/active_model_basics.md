@@ -178,18 +178,14 @@ class Person
   include ActiveModel::Dirty
   define_attribute_methods :first_name, :last_name
 
-  def first_name
-    @first_name
-  end
+  attr_reader :first_name
 
   def first_name=(value)
     first_name_will_change!
     @first_name = value
   end
 
-  def last_name
-    @last_name
-  end
+  attr_reader :last_name
 
   def last_name=(value)
     last_name_will_change!

@@ -499,6 +499,7 @@ require "rails/all"
 This file is responsible for requiring all the individual frameworks of Rails:
 
 ```ruby
+# rubocop:disable Style/RedundantBegin
 require "rails"
 
 %w(
