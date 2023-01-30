@@ -4,8 +4,7 @@ all
 
 exclude_rule "MD003"
 exclude_rule "MD004"
-#exclude_rule "MD005"
-#exclude_rule "MD007"
+exclude_rule "MD005" # When using 2 spaces for MD007, this must be disabled
 exclude_rule "MD006"
 exclude_rule "MD014"
 exclude_rule "MD026"

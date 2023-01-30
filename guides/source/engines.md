@@ -92,46 +92,46 @@ skeleton structure as would the `--full` option. The `--full` option tells the
 generator that you want to create an engine, including a skeleton structure
 that provides the following:
 
-* An `app` directory tree
-* A `config/routes.rb` file:
+  * An `app` directory tree
+  * A `config/routes.rb` file:
 
-  ```ruby
-  Rails.application.routes.draw do
-  end
-  ```
-
-* A file at `lib/blorgh/engine.rb`, which is identical in function to a
-  standard Rails application's `config/application.rb` file:
-
-  ```ruby
-  module Blorgh
-    class Engine < ::Rails::Engine
+    ```ruby
+    Rails.application.routes.draw do
     end
-  end
-  ```
+    ```
+
+  * A file at `lib/blorgh/engine.rb`, which is identical in function to a
+    standard Rails application's `config/application.rb` file:
+
+    ```ruby
+    module Blorgh
+      class Engine < ::Rails::Engine
+      end
+    end
+    ```
 
 The `--mountable` option will add to the `--full` option:
 
-* Asset manifest files (`blorgh_manifest.js` and `application.css`)
-* A namespaced `ApplicationController` stub
-* A namespaced `ApplicationHelper` stub
-* A layout view template for the engine
-* Namespace isolation to `config/routes.rb`:
+  * Asset manifest files (`blorgh_manifest.js` and `application.css`)
+  * A namespaced `ApplicationController` stub
+  * A namespaced `ApplicationHelper` stub
+  * A layout view template for the engine
+  * Namespace isolation to `config/routes.rb`:
 
-  ```ruby
-  Blorgh::Engine.routes.draw do
-  end
-  ```
-
-* Namespace isolation to `lib/blorgh/engine.rb`:
-
-  ```ruby
-  module Blorgh
-    class Engine < ::Rails::Engine
-      isolate_namespace Blorgh
+    ```ruby
+    Blorgh::Engine.routes.draw do
     end
-  end
-  ```
+    ```
+
+  * Namespace isolation to `lib/blorgh/engine.rb`:
+
+    ```ruby
+    module Blorgh
+      class Engine < ::Rails::Engine
+        isolate_namespace Blorgh
+      end
+    end
+    ```
 
 Additionally, the `--mountable` option tells the generator to mount the engine
 inside the dummy testing application located at `test/dummy` by adding the
