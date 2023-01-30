@@ -1544,7 +1544,7 @@ This loads all the customers and the associated orders and reviews for each.
 ##### Nested Associations Hash
 
 ```ruby
-Customer.includes(orders: {books: [:supplier, :author]}).find(1)
+Customer.includes(orders: { books: [:supplier, :author] }).find(1)
 ```
 
 This will find the customer with id 1 and eager load all of the associated orders for it, the books for all of the orders, and the author and supplier for each of the books.
