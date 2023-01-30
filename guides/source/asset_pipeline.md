@@ -111,26 +111,27 @@ with a built-in helper. In the source the generated code looked like this:
 
 The query string strategy has several disadvantages:
 
-1. **Not all caches will reliably cache content where the filename only differs by
-query parameters**
+1. **Not all caches will reliably cache content where the filename only differs by query parameters**
 
-    [Steve Souders recommends](https://www.stevesouders.com/blog/2008/08/23/revving-filenames-dont-use-querystring/),
-"...avoiding a querystring for cacheable resources". He found that in this
-case 5-20% of requests will not be cached. Query strings in particular do not
-work at all with some CDNs for cache invalidation.
+    [Steve Souders
+    recommends](https://www.stevesouders.com/blog/2008/08/23/revving-filenames-dont-use-querystring/),
+    "...avoiding a querystring for cacheable resources". He found that in this
+    case 5-20% of requests will not be cached. Query strings in particular do
+    not work at all with some CDNs for cache invalidation.
 
 2. **The file name can change between nodes in multi-server environments.**
 
     The default query string in Rails 2.x is based on the modification time of
-the files. When assets are deployed to a cluster, there is no guarantee that the
-timestamps will be the same, resulting in different values being used depending
-on which server handles the request.
+    the files. When assets are deployed to a cluster, there is no guarantee that
+    the timestamps will be the same, resulting in different values being used
+    depending on which server handles the request.
 
 3. **Too much cache invalidation**
 
     When static assets are deployed with each new release of code, the mtime
-(time of last modification) of _all_ these files changes, forcing all remote
-clients to fetch them again, even when the content of those assets has not changed.
+    (time of last modification) of _all_ these files changes, forcing all remote
+    clients to fetch them again, even when the content of those assets has not
+    changed.
 
 Fingerprinting fixes these problems by avoiding query strings, and by ensuring
 that filenames are consistent based on their content.
@@ -145,7 +146,6 @@ More reading:
 * [Revving Filenames: don't use querystring](http://www.stevesouders.com/blog/2008/08/23/revving-filenames-dont-use-querystring/)
 
 [`config.assets.digest`]: configuring.html#config-assets-digest
-
 
 How to Use the Asset Pipeline
 -----------------------------
@@ -205,15 +205,17 @@ Pipeline assets can be placed inside an application in one of three locations:
 `app/assets`, `lib/assets` or `vendor/assets`.
 
 * `app/assets` is for assets that are owned by the application, such as custom
-images, JavaScript files, or stylesheets.
+  images, JavaScript files, or stylesheets.
 
 * `lib/assets` is for your own libraries' code that doesn't really fit into the
-scope of the application or those libraries which are shared across applications.
+  scope of the application or those libraries which are shared across
+  applications.
 
-* `vendor/assets` is for assets that are owned by outside entities, such as
-code for JavaScript plugins and CSS frameworks. Keep in mind that third party
-code with references to other files also processed by the asset Pipeline (images,
-stylesheets, etc.), will need to be rewritten to use helpers like `asset_path`.
+* `vendor/assets` is for assets that are owned by outside entities, such as code
+  for JavaScript plugins and CSS frameworks. Keep in mind that third party code
+  with references to other files also processed by the asset Pipeline (images,
+  stylesheets, etc.), will need to be rewritten to use helpers like
+  `asset_path`.
 
 #### Search Paths
 
@@ -513,7 +515,6 @@ you called your JavaScript file `app/assets/javascripts/projects.erb.coffee`
 then it would be processed with the CoffeeScript interpreter first, which
 wouldn't understand ERB and therefore you would run into problems.
 
-
 In Development
 --------------
 
@@ -775,6 +776,7 @@ Note the following caveats:
     ```ruby
     config.assets.prefix = "/dev-assets"
     ```
+
 * The asset precompile task in your deployment tool (_e.g.,_ Capistrano) should
   be disabled.
 * Any necessary compressors or minifiers must be available on your development
@@ -870,8 +872,6 @@ staging copy of your site easier:
 ```ruby
 config.asset_host = ENV['CDN_HOST']
 ```
-
-
 
 NOTE: You would need to set `CDN_HOST` on your server to `mycdnsubdomain
 .fictional-cdn.com` for this to work.
@@ -1130,6 +1130,7 @@ and any other environments you define with production behavior (not
 `application.rb`).
 
 TIP: For further details have a look at the docs of your production web server:
+
 - [Apache](https://tn123.org/mod_xsendfile/)
 - [NGINX](https://www.nginx.com/resources/wiki/start/topics/examples/xsendfile/)
 
