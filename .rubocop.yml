@@ -3,6 +3,7 @@ require:
   - rubocop-packaging
   - rubocop-performance
   - rubocop-rails
+  - rubocop-md
 
 AllCops:
   TargetRubyVersion: 2.7
@@ -18,6 +19,13 @@ AllCops:
     - 'actionmailbox/test/dummy/**/*'
     - 'actiontext/test/dummy/**/*'
     - '**/node_modules/**/*'
+    - '**/CHANGELOG.md'
+    - '**/2_*_release_notes.md'
+    - '**/3_*_release_notes.md'
+    - '**/4_*_release_notes.md'
+    - '**/5_*_release_notes.md'
+    - '**/6_*_release_notes.md'
+
 
 Performance:
   Exclude:
@@ -343,3 +351,9 @@ Minitest/SkipEnsure:
 
 Minitest/UnreachableAssertion:
   Enabled: true
+
+Markdown:
+  # Whether to run RuboCop against non-valid snippets
+  WarnInvalid: false
+  # Whether to lint codeblocks without code attributes
+  Autodetect: false

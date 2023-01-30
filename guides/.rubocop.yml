@@ -1,0 +1,8 @@
+inherit_from:
+  - '../.rubocop.yml'
+
+Style/StringLiterals:
+  Enabled: false
+
+Layout/IndentationConsistency:
+  Enabled: false
