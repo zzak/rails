@@ -24,8 +24,8 @@ Explaining how Rack works is not really in the scope of this guide. In case you
 are not familiar with Rack's basics, you should check out the [Resources](#resources)
 section below.
 
-Rails on Rack
--------------
+Running with Rails on Rack
+--------------------------
 
 ### Rails Application's Rack Object
 

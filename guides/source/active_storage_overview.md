@@ -183,6 +183,7 @@ amazon:
     server_side_encryption: "" # 'aws:kms' or 'AES256'
     cache_control: "private, max-age=<%= 1.day.to_i %>"
 ```
+
 TIP: Set sensible client HTTP timeouts and retry limits for your application. In certain failure scenarios, the default AWS client configuration may cause connections to be held for up to several minutes and lead to request queuing.
 
 Add the [`aws-sdk-s3`](https://github.com/aws/aws-sdk-ruby) gem to your `Gemfile`:
@@ -535,7 +536,6 @@ end
 [Attached::Many#attach]: https://api.rubyonrails.org/classes/ActiveStorage/Attached/Many.html#method-i-attach
 [Attached::Many#attached?]: https://api.rubyonrails.org/classes/ActiveStorage/Attached/Many.html#method-i-attached-3F
 
-
 ### Attaching File/IO Objects
 
 Sometimes you need to attach a file that doesn’t arrive via an HTTP request.
@@ -570,7 +570,6 @@ You can bypass the content type inference from the data by passing in
 
 If you don’t provide a content type and Active Storage can’t determine the
 file’s content type automatically, it defaults to application/octet-stream.
-
 
 Removing Files
 --------------
@@ -915,7 +914,6 @@ variant processor that you are using, but both support the following parameters:
 | `rotate` | `rotate: 90` | Rotates the image by the specified angle. |
 
 [`image_processing`][] has more options available (such as `saver` which allows image compression to be configured) in it's own documentation for the [Vips](https://github.com/janko/image_processing/blob/master/doc/vips.md) and [MiniMagick](https://github.com/janko/image_processing/blob/master/doc/minimagick.md) processors.
-
 
 [`config.active_storage.variable_content_types`]: configuring.html#config-active-storage-variable-content-types
 [`config.active_storage.variant_processor`]: configuring.html#config-active-storage-variant-processor

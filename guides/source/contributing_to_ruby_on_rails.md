@@ -81,7 +81,6 @@ won't be accepted". But it's the proper place to discuss new ideas. GitHub
 Issues are not a particularly good venue for the sometimes long and involved
 discussions new features require.
 
-
 Helping to Resolve Existing Issues
 ----------------------------------
 
@@ -437,6 +436,7 @@ For MySQL and PostgreSQL, it is sufficient to run:
 $ cd activerecord
 $ bundle exec rake db:mysql:build
 ```
+
 Or:
 
 ```bash

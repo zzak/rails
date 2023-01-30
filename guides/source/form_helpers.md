@@ -366,6 +366,7 @@ Rails works around this issue by emulating other methods over POST through a com
   <button type="submit" name="button">Update</button>
 </form>
 ```
+
 [formmethod]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button#attr-formmethod
 [button-name]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button#attr-name
 [button-value]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button#attr-value
@@ -971,7 +972,6 @@ The following form allows a user to create a `Person` and its associated address
   </ul>
 <% end %>
 ```
-
 
 When an association accepts nested attributes `fields_for` renders its block once for every element of the association. In particular, if a person has no addresses it renders nothing. A common pattern is for the controller to build one or more empty children so that at least one set of fields is shown to the user. The example below would result in 2 sets of address fields being rendered on the new person form.
 

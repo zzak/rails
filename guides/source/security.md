@@ -564,16 +564,14 @@ A restricted list can be a list of bad e-mail addresses, non-public actions or b
 * Use `before_action except: [...]` instead of `only: [...]` for security-related actions. This way you don't forget to enable security checks for newly added actions.
 * Allow `<strong>` instead of removing `<script>` against Cross-Site Scripting (XSS). See below for details.
 * Don't try to correct user input using restricted lists:
-    * This will make the attack work: `"<sc<script>ript>".gsub("<script>", "")`
-    * But reject malformed input
+  * This will make the attack work: `"<sc<script>ript>".gsub("<script>", "")`
+  * But reject malformed input
 
 Permitted lists are also a good approach against the human factor of forgetting something in the restricted list.
 
 ### SQL Injection
 
 INFO: _Thanks to clever methods, this is hardly a problem in most Rails applications. However, this is a very devastating and common attack in web applications, so it is important to understand the problem._
-
-#### Introduction
 
 SQL injection attacks aim at influencing database queries by manipulating web application parameters. A popular goal of SQL injection attacks is to bypass authorization. Another goal is to carry out data manipulation or reading arbitrary data. Here is an example of how not to use user input data in a query:
 
@@ -630,7 +628,7 @@ The result won't be a list of projects (because there is no project with an empt
 
 Also, the second query renames some columns with the AS statement so that the web application displays the values from the user table. Be sure to update your Rails [to at least 2.1.1](https://rorsecurity.info/journal/2008/09/08/sql-injection-issue-in-limit-and-offset-parameter.html).
 
-#### Countermeasures
+#### SQL Injection Countermeasures
 
 Ruby on Rails has a built-in filter for special SQL characters, which will escape `'` , `"` , NULL character, and line breaks. *Using `Model.find(id)` or `Model.find_by_something(something)` automatically applies this countermeasure*. But in SQL fragments, especially *in conditions fragments (`where("...")`), the `connection.execute()` or `Model.find_by_sql()` methods, it has to be applied manually*.
 
@@ -734,7 +732,7 @@ http://www.cbsnews.com/stories/2002/02/15/weather_local/main501644.shtml?zipcode
   <script src=http://www.securitylab.ru/test/sc.js></script><!--
 ```
 
-##### Countermeasures
+##### XSS Countermeasures
 
 _It is very important to filter malicious input, but it is also important to escape the output of the web application_.
 

@@ -539,8 +539,9 @@ Some common modules you might want to add:
 - `ActionController::MimeResponds`: Support for `respond_to`.
 - `ActionController::Cookies`: Support for `cookies`, which includes
   support for signed and encrypted cookies. This requires the cookies middleware.
-- `ActionController::Caching`: Support view caching for the API controller. Please note
-  that you will need to manually specify the cache store inside the controller like this:
+- `ActionController::Caching`: Support view caching for the API controller.
+  Please note that you will need to manually specify the cache store inside the
+  controller like this:
 
     ```ruby
     class ApplicationController < ActionController::API
@@ -548,7 +549,8 @@ Some common modules you might want to add:
       self.cache_store = :mem_cache_store
     end
     ```
-  Rails does *not* pass this configuration automatically.
+
+    Rails does *not* pass this configuration automatically.
 
 The best place to add a module is in your `ApplicationController`, but you can
 also add modules to individual controllers.
