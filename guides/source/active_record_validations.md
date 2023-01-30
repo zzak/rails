@@ -1073,7 +1073,7 @@ Passing an array of symbols is also acceptable.
 
 ```ruby
 class Book
-  include ActiveModel:Validations
+  include ActiveModel::Validations
 
   validates :title, presence: true, on: [:update, :ensure_title]
 end
