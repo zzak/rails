@@ -46,6 +46,7 @@ group :rubocop do
   gem "rubocop-performance", require: false
   gem "rubocop-rails", require: false
   gem "rubocop-md", require: false
+  gem "mdl", require: false
 end
 
 group :doc do
