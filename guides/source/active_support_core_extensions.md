@@ -2494,7 +2494,7 @@ NOTE: Defined in `active_support/core_ext/array/conversions.rb`.
 
 [Array#to_sentence]: https://api.rubyonrails.org/classes/Array.html#method-i-to_sentence
 
-#### `to_fs`
+#### `Array#to_fs`
 
 The method [`to_fs`][Array#to_fs] acts like `to_s` by default.
 
@@ -3158,7 +3158,7 @@ NOTE: Defined in `active_support/core_ext/regexp.rb`.
 Extensions to `Range`
 ---------------------
 
-### `to_fs`
+### `Range#to_fs`
 
 Active Support defines `Range#to_fs` as an alternative to `to_s` that understands an optional format argument. As of this writing the only supported non-default format is `:db`:
 
