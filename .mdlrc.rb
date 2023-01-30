@@ -18,7 +18,8 @@ exclude_rule "MD041"
 
 #rule "MD003", style: :setext_with_atx
 #rule "MD004", style: :sublist
+rule "MD007", indent: 2
 rule "MD013", line_length: 2000, ignore_code_blocks: true
 rule "MD024", allow_different_nesting: true
 rule "MD029", style: :ordered
-rule "MD046", style: :consistent
+#rule "MD046", style: :consistent # default (:fenced)
