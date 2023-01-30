@@ -37,7 +37,7 @@ only the extensions required by the Active Support framework are loaded.
 This example shows how to load [`Hash#with_indifferent_access`][Hash#with_indifferent_access].  This extension enables the conversion of a `Hash` into an [`ActiveSupport::HashWithIndifferentAccess`][ActiveSupport::HashWithIndifferentAccess] which permits access to the keys as either strings or symbols.
 
 ```ruby
-{a: 1}.with_indifferent_access["a"] # => 1
+{ a: 1 }.with_indifferent_access["a"] # => 1
 ```
 
 For every single method defined as a core extension this guide has a note that says where such a method is defined. In the case of `with_indifferent_access` the note reads:
@@ -393,13 +393,13 @@ Arrays return the result of applying `to_query` to each element with `key[]` as 
 Hashes also respond to `to_query` but with a different signature. If no argument is passed a call generates a sorted series of key/value assignments calling `to_query(key)` on its values. Then it joins the result with "&":
 
 ```ruby
-{c: 3, b: 2, a: 1}.to_query # => "a=1&b=2&c=3"
+{ c: 3, b: 2, a: 1 }.to_query # => "a=1&b=2&c=3"
 ```
 
 The method [`Hash#to_query`][Hash#to_query] accepts an optional namespace for the keys:
 
 ```ruby
-{id: 89, name: "John Smith"}.to_query('user')
+{ id: 89, name: "John Smith" }.to_query('user')
 # => "user%5Bid%5D=89&user%5Bname%5D=John+Smith"
 ```
 
@@ -2211,7 +2211,7 @@ Addition only assumes the elements respond to `+`:
 ```ruby
 [[1, 2], [2, 3], [3, 4]].sum    # => [1, 2, 2, 3, 3, 4]
 %w(foo bar baz).sum             # => "foobarbaz"
-{a: 1, b: 2, c: 3}.sum          # => [:a, 1, :b, 2, :c, 3]
+{ a: 1, b: 2, c: 3 }.sum          # => [:a, 1, :b, 2, :c, 3]
 ```
 
 The sum of an empty collection is zero by default, but this is customizable:
@@ -2573,7 +2573,7 @@ If there's any element that does not belong to the type of the first one the roo
 If the receiver is an array of hashes the root element is by default also "objects":
 
 ```ruby
-[{a: 1, b: 2}, {c: 3}].to_xml
+[{ a: 1, b: 2 }, { c: 3 }].to_xml
 # =>
 # <?xml version="1.0" encoding="UTF-8"?>
 # <objects type="array">
