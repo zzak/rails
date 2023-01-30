@@ -119,7 +119,7 @@ $ sqlite3 --version
 
 The program should report its version.
 
-#### Instal the `rails` gem
+#### Install the `rails` gem
 
 To install Rails, use the `gem install` command provided by RubyGems:
 

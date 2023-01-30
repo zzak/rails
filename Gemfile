@@ -46,7 +46,11 @@ group :rubocop do
   gem "rubocop-performance", require: false
   gem "rubocop-rails", require: false
   gem "rubocop-md", require: false
+end
+
+group :mdl do
   gem "mdl", require: false
+  gem "rake", ">= 13", require: false
 end
 
 group :doc do
