@@ -6,3 +6,9 @@ Style/StringLiterals:
 
 Layout/IndentationConsistency:
   Enabled: false
+
+Style/EvalWithLocation:
+  Enabled: false
+
+Performance/UnfreezeString:
+  Enabled: false

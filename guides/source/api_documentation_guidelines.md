@@ -316,7 +316,7 @@ self.class_eval %{
     options = args.extract_options!
     ...
   end
-}
+}, __FILE__, __LINE__
 ```
 
 Method Visibility
