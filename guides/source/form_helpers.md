@@ -733,7 +733,7 @@ by defining a `LabellingFormBuilder` class similar to the following:
 
 ```ruby
 class LabellingFormBuilder < ActionView::Helpers::FormBuilder
-  def text_field(attribute, options={})
+  def text_field(attribute, options = {})
     label(attribute) + super
   end
 end
@@ -743,7 +743,7 @@ If you reuse this frequently you could define a `labeled_form_with` helper that 
 
 ```ruby
 def labeled_form_with(model: nil, scope: nil, url: nil, format: nil, **options, &block)
-  options.merge! builder: LabellingFormBuilder
+  options[:builder] = LabellingFormBuilder
   form_with model: model, scope: scope, url: url, format: format, **options, &block
 end
 ```

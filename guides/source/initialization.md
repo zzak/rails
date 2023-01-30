@@ -332,7 +332,7 @@ The `super` method will call `Rack::Server.start` which begins its definition as
 ```ruby
 module Rack
   class Server
-    def start &blk
+    def start(&blk)
       if options[:warn]
         $-w = true
       end
@@ -418,7 +418,6 @@ module Rack
       def build_app_from_string
         Rack::Builder.new_from_string(self.options[:builder])
       end
-
   end
 end
 ```
@@ -447,7 +446,7 @@ module Rack
 
     # ...
 
-    def self.new_from_string(builder_script, file="(rackup)")
+    def self.new_from_string(builder_script, file = "(rackup)")
       eval "Rack::Builder.new {\n" + builder_script + "\n}.to_app",
         TOPLEVEL_BINDING, file, 0
     end
@@ -500,6 +499,7 @@ require "rails/all"
 This file is responsible for requiring all the individual frameworks of Rails:
 
 ```ruby
+# rubocop:disable Style/RedundantBegin
 require "rails"
 
 %w(
@@ -610,7 +610,6 @@ module Rack
       def build_app_from_string
         Rack::Builder.new_from_string(self.options[:builder])
       end
-
   end
 end
 ```
@@ -656,7 +655,7 @@ module Rack
 
         events = options.delete(:Silent) ? ::Puma::Events.strings : ::Puma::Events.stdio
 
-        launcher = ::Puma::Launcher.new(conf, :events => events)
+        launcher = ::Puma::Launcher.new(conf, events: events)
 
         yield launcher if block_given?
         begin

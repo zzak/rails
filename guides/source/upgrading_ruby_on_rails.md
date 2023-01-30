@@ -1790,7 +1790,7 @@ rake("db:migrate")
 
 git :init
 git add: "."
-git commit: %Q{ -m 'Initial commit' }
+git commit: " -m 'Initial commit' "
 ```
 
 You can now wrap the `git` calls in an `after_bundle` block. It will be run
@@ -1805,7 +1805,7 @@ rake("db:migrate")
 after_bundle do
   git :init
   git add: "."
-  git commit: %Q{ -m 'Initial commit' }
+  git commit: " -m 'Initial commit' "
 end
 ```
 
@@ -2133,7 +2133,7 @@ class ReadOnlyModel < ActiveRecord::Base
 
   private
     def before_save_callback
-      return false
+      false
     end
 end
 ```

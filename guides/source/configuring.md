@@ -339,12 +339,11 @@ class CustomExceptionsAppWrapper
   end
 
   private
-
-  def fallback_to_html_format_if_invalid_mime_type(request)
-    request.formats
-  rescue ActionDispatch::Http::MimeNegotiation::InvalidType
-    request.set_header "CONTENT_TYPE", "text/html"
-  end
+    def fallback_to_html_format_if_invalid_mime_type(request)
+      request.formats
+    rescue ActionDispatch::Http::MimeNegotiation::InvalidType
+      request.set_header "CONTENT_TYPE", "text/html"
+    end
 end
 ```
 
@@ -707,7 +706,7 @@ You can exclude certain requests from Host Authorization checks by setting
 ```ruby
 # Exclude requests for the /healthcheck/ path from host checking
 Rails.application.config.host_authorization = {
-  exclude: ->(request) { request.path =~ /healthcheck/ }
+  exclude: ->(request) { request.path.include?('healthcheck') }
 }
 ```
 

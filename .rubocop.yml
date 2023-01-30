@@ -109,6 +109,8 @@ Style/HashSyntax:
 Layout/IndentationConsistency:
   Enabled: true
   EnforcedStyle: indented_internal_methods
+  Exclude:
+    - '**/*.md'
 
 # Two spaces, no tabs (for indentation).
 Layout/IndentationWidth:
@@ -166,6 +168,7 @@ Style/FrozenStringLiteralComment:
     - 'activestorage/db/update_migrate/**/*.rb'
     - 'actionmailbox/db/migrate/**/*.rb'
     - 'actiontext/db/migrate/**/*.rb'
+    - '**/*.md'
 
 Style/MapToHash:
   Enabled: true

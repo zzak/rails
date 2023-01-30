@@ -528,7 +528,7 @@ The predicate [`in?`][Object#in?] tests if an object is included in another obje
 Examples of `in?`:
 
 ```ruby
-1.in?([1,2])        # => true
+1.in?([1, 2])        # => true
 "lo".in?("hello")   # => true
 25.in?(30..50)      # => false
 1.in?(1)            # => ArgumentError
@@ -2224,14 +2224,14 @@ The sum of an empty collection is zero by default, but this is customizable:
 If a block is given, `sum` becomes an iterator that yields the elements of the collection and sums the returned values:
 
 ```ruby
-(1..5).sum {|n| n * 2 } # => 30
+(1..5).sum { |n| n * 2 } # => 30
 [2, 4, 6, 8, 10].sum    # => 30
 ```
 
 The sum of an empty receiver can be customized in this form as well:
 
 ```ruby
-[].sum(1) {|n| n**3} # => 1
+[].sum(1) { |n| n**3 } # => 1
 ```
 
 NOTE: Defined in `active_support/core_ext/enumerable.rb`.
@@ -2287,7 +2287,7 @@ The method [`many?`][Enumerable#many?] is shorthand for `collection.size > 1`:
 If an optional block is given, `many?` only takes into account those elements that return true:
 
 ```ruby
-@see_more = videos.many? {|video| video.category == params[:category]}
+@see_more = videos.many? { |video| video.category == params[:category] }
 ```
 
 NOTE: Defined in `active_support/core_ext/enumerable.rb`.
