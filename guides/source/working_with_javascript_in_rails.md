@@ -10,8 +10,8 @@ Rails.
 After reading this guide, you will know:
 
 * How to use Rails without the need for a Node.js, Yarn, or a JavaScript bundler.
-* How to create a new Rails application using import maps, esbuild, rollup, or
-  webpack to bundle your JavaScript.
+* How to create a new Rails application using import maps, esbuild, rollup, or webpack to bundle
+your JavaScript.
 * What Turbo is, and how to use it.
 * How to use the Turbo HTML helpers provided by Rails.
 
@@ -130,9 +130,9 @@ that you should choose a traditional bundler include:
 
 * If your code requires a transpilation step, such as JSX or TypeScript.
 * If you need to use JavaScript libraries that include CSS or otherwise rely on
-  [Webpack loaders](https://webpack.js.org/loaders/).
+[Webpack loaders](https://webpack.js.org/loaders/).
 * If you are absolutely sure that you need
-  [tree-shaking](https://webpack.js.org/guides/tree-shaking/).
+[tree-shaking](https://webpack.js.org/guides/tree-shaking/).
 * If you will install Bootstrap, Bulma, PostCSS, or Dart CSS through the
 [cssbundling-rails gem](https://github.com/rails/cssbundling-rails). All options provided by this
 gem except Tailwind and Sass will automatically install `esbuild` for you if you do not specify a different

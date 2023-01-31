@@ -775,6 +775,7 @@ To get multiple fixtures at once, you can pass in a list of fixture names. For e
 users(:david, :steve)
 ```
 
+
 Model Testing
 -------------
 
@@ -1170,6 +1171,7 @@ Finally we can assert that our response was successful and our new article is re
 
 We were able to successfully test a very small workflow for visiting our blog and creating a new article. If we wanted to take this further we could add tests for commenting, removing articles, or editing comments. Integration tests are a great place to experiment with all kinds of use cases for our applications.
 
+
 Functional Tests for Your Controllers
 -------------------------------------
 
@@ -1333,6 +1335,7 @@ cookies["are_good_for_u"]     cookies[:are_good_for_u]
 * `@controller` - The controller processing the request
 * `@request` - The request object
 * `@response` - The response object
+
 
 ```ruby
 class ArticlesControllerTest < ActionDispatch::IntegrationTest

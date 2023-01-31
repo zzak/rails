@@ -1126,6 +1126,7 @@ SELECT * FROM books WHERE out_of_print = 1 AND out_of_print = 0
 
 [`regroup`]: https://api.rubyonrails.org/classes/ActiveRecord/QueryMethods.html#method-i-regroup
 
+
 ### `regroup`
 
 The [`regroup`][] method overrides an existing, named `group` condition. For example:
@@ -1153,6 +1154,7 @@ SELECT * FROM books GROUP BY author, id
 ```
 
 [`regroup`]: https://api.rubyonrails.org/classes/ActiveRecord/QueryMethods.html#method-i-regroup
+
 
 Null Relation
 -------------
@@ -1475,6 +1477,7 @@ WHERE reviews.id IS NULL
 
 Which means "return all customers that have not made any reviews".
 
+
 Eager Loading Associations
 --------------------------
 
@@ -1585,6 +1588,7 @@ This is because it is ambiguous whether they should appear on the parent record,
 With `preload`, Active Record loads each specified association using one query per association.
 
 Revisiting the N + 1 queries problem, we could rewrite `Book.limit(10)` to preload authors:
+
 
 ```ruby
 books = Book.preload(:author).limit(10)

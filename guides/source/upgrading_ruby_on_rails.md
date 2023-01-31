@@ -1141,7 +1141,7 @@ Otherwise you'll get this error:
 reloading is disabled because config.cache_classes is true
 ```
 
-#### Bootsnap dependency recommendation
+#### Bootsnap
 
 Bootsnap should be at least version 1.4.2.
 
@@ -1259,7 +1259,7 @@ Upgrading from Rails 5.1 to Rails 5.2
 
 For more information on changes made to Rails 5.2 please see the [release notes](5_2_release_notes.html).
 
-### Bootsnap added to default Gemfile
+### Bootsnap
 
 Rails 5.2 adds bootsnap gem in the [newly generated app's Gemfile](https://github.com/rails/rails/pull/29313).
 The `app:update` command sets it up in `boot.rb`. If you want to use it, then add it in the Gemfile:
@@ -1335,6 +1335,7 @@ a `fallback_location` option which will be used in case the `HTTP_REFERER` is mi
 ```ruby
 redirect_back(fallback_location: root_path)
 ```
+
 
 Upgrading from Rails 4.2 to Rails 5.0
 -------------------------------------
@@ -1900,8 +1901,8 @@ The migration procedure is as follows:
 1. remove `gem "foreigner"` from the `Gemfile`.
 2. run `bundle install`.
 3. run `bin/rake db:schema:dump`.
-4. make sure that `db/schema.rb` contains every foreign key definition with the
-   necessary options.
+4. make sure that `db/schema.rb` contains every foreign key definition with
+the necessary options.
 
 Upgrading from Rails 4.0 to Rails 4.1
 -------------------------------------
@@ -2446,15 +2447,13 @@ Rails 4.0 no longer supports loading plugins from `vendor/plugins`. You must rep
 
 * Rails 4.0 has changed `serialized_attributes` and `attr_readonly` to class methods only. You shouldn't use instance methods since it's now deprecated. You should change them to use class methods, e.g. `self.serialized_attributes` to `self.class.serialized_attributes`.
 
-* When using the default coder, assigning `nil` to a serialized attribute will
-  save it to the database as `NULL` instead of passing the `nil` value through
-  YAML (`"--- \n...\n"`).
+* When using the default coder, assigning `nil` to a serialized attribute will save it
+to the database as `NULL` instead of passing the `nil` value through YAML (`"--- \n...\n"`).
 
 * Rails 4.0 has removed `attr_accessible` and `attr_protected` feature in favor of Strong Parameters. You can use the [Protected Attributes gem](https://github.com/rails/protected_attributes) for a smooth upgrade path.
 
-* If you are not using Protected Attributes, you can remove any options related
-  to this gem such as `whitelist_attributes` or `mass_assignment_sanitizer`
-  options.
+* If you are not using Protected Attributes, you can remove any options related to
+this gem such as `whitelist_attributes` or `mass_assignment_sanitizer` options.
 
 * Rails 4.0 requires that scopes use a callable object such as a Proc or lambda:
 
@@ -2550,10 +2549,10 @@ Rails 4.0 extracted Active Resource to its own gem. If you still need the featur
 
 * Rails 4.0 deprecates the `dom_id` and `dom_class` methods in controllers (they are fine in views). You will need to include the `ActionView::RecordIdentifier` module in controllers requiring this feature.
 
-* Rails 4.0 deprecates the `:confirm` option for the `link_to` helper. You
-  should instead rely on a data attribute (e.g. `data: { confirm: 'Are you
-  sure?' }`). This deprecation also concerns the helpers based on this one (such
-  as `link_to_if` or `link_to_unless`).
+* Rails 4.0 deprecates the `:confirm` option for the `link_to` helper. You should
+instead rely on a data attribute (e.g. `data: { confirm: 'Are you sure?' }`).
+This deprecation also concerns the helpers based on this one (such as `link_to_if`
+or `link_to_unless`).
 
 * Rails 4.0 changed how `assert_generates`, `assert_recognizes`, and `assert_routing` work. Now all these assertions raise `Assertion` instead of `ActionController::RoutingError`.
 

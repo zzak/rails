@@ -115,11 +115,11 @@ Here is a quick explanation of the items presented in the preceding method. For
 a full list of all available options, please have a look further down at the
 Complete List of Action Mailer user-settable attributes section.
 
-* The [`default`][] method sets default values for all emails sent from this
-  mailer. In this case, we use it to set the `:from` header value for all
-  messages in this class. This can be overridden on a per-email basis.
+* The [`default`][] method sets default values for all emails sent from
+this mailer. In this case, we use it to set the `:from` header value for all
+messages in this class. This can be overridden on a per-email basis.
 * The [`mail`][] method creates the actual email message. We use it to specify
-  the values of headers like `:to` and `:subject` per email.
+the values of headers like `:to` and `:subject` per email.
 
 [`default`]: https://api.rubyonrails.org/classes/ActionMailer/Base.html#method-c-default
 [`mail`]: https://api.rubyonrails.org/classes/ActionMailer/Base.html#method-i-mail
@@ -598,6 +598,7 @@ By using the full URL, your links will now work in your emails.
 
 If you did not configure the `:host` option globally make sure to pass it to
 `url_for`.
+
 
 ```erb
 <%= url_for(host: 'example.com',

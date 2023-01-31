@@ -100,6 +100,7 @@ ActiveSupport::Notifications.subscribe(/action_controller/) do |*args|
 end
 ```
 
+
 Rails framework hooks
 ---------------------
 
@@ -337,6 +338,7 @@ INFO. Additional keys may be added by the caller.
 | Key           | Value                 |
 | ------------- | --------------------- |
 | `:identifier` | Full path to template |
+
 
 ```ruby
 {
