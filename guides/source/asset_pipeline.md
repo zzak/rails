@@ -751,9 +751,9 @@ $ RAILS_ENV=production rails assets:precompile
 
 Note the following caveats:
 
-*   If precompiled assets are available, they will be served — even if they no
-    longer match the original (uncompiled) assets, _even on the development
-    server._
+* If precompiled assets are available, they will be served — even if they no
+  longer match the original (uncompiled) assets, _even on the development
+  server._
 
     To ensure that the development server always compiles assets on-the-fly (and
     thus always reflects the most recent state of the code), the development
