@@ -2370,7 +2370,7 @@ conditions exists in the collection's table.
 The [`collection.build`][] method returns a new object of the associated type. This object will be instantiated from the passed attributes, and the link through the join table will be created, but the associated object will _not_ yet be saved.
 
 ```ruby
-@assembly = @part.assemblies.build({assembly_name: "Transmission housing"})
+@assembly = @part.assemblies.build({ assembly_name: "Transmission housing" })
 ```
 
 ##### `collection.create(attributes = {})`
@@ -2378,7 +2378,7 @@ The [`collection.build`][] method returns a new object of the associated type. T
 The [`collection.create`][] method returns a new object of the associated type. This object will be instantiated from the passed attributes, the link through the join table will be created, and, once it passes all of the validations specified on the associated model, the associated object _will_ be saved.
 
 ```ruby
-@assembly = @part.assemblies.create({assembly_name: "Transmission housing"})
+@assembly = @part.assemblies.create({ assembly_name: "Transmission housing" })
 ```
 
 ##### `collection.create!(attributes = {})`
@@ -2853,7 +2853,7 @@ end
 
 With this definition complete, our `Entry` delegator now provides the following methods:
 
-```ruby
+```
 Entry#entryable_class # => Message or Comment
 Entry#entryable_name  # => "message" or "comment"
 Entry.messages        # => Entry.where(entryable_type: "Message")
