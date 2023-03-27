@@ -133,10 +133,7 @@ that you should choose a traditional bundler include:
   [Webpack loaders](https://webpack.js.org/loaders/).
 * If you are absolutely sure that you need
   [tree-shaking](https://webpack.js.org/guides/tree-shaking/).
-* If you will install Bootstrap, Bulma, PostCSS, or Dart CSS through the
-[cssbundling-rails gem](https://github.com/rails/cssbundling-rails). All options provided by this
-gem except Tailwind and Sass will automatically install `esbuild` for you if you do not specify a different
-option in `rails new`.
+* If you will install Bootstrap, Bulma, PostCSS, or Dart CSS through the [cssbundling-rails gem](https://github.com/rails/cssbundling-rails). All options provided by this gem except Tailwind and Sass will automatically install `esbuild` for you if you do not specify a different option in `rails new`.
 
 Turbo
 -----
