@@ -7,6 +7,8 @@
 require "net/http"
 require "uri"
 
+puts ARGV.inspect
+
 uri = URI(ARGV[0])
 
 60.times do |i|
