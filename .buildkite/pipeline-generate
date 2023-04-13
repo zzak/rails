@@ -7,7 +7,7 @@ require "pathname"
 require "yaml"
 
 QUEUE = ENV["BUILDKITE_AGENT_META_DATA_QUEUE"] || "default"
-IMAGE_BASE = "local/build"#ENV["DOCKER_IMAGE"] || "973266071021.dkr.ecr.us-east-1.amazonaws.com/#{"#{QUEUE}-" unless QUEUE == 'default'}builds"
+IMAGE_BASE = ""#ENV["DOCKER_IMAGE"] || "973266071021.dkr.ecr.us-east-1.amazonaws.com/#{"#{QUEUE}-" unless QUEUE == 'default'}builds"
 
 BASE_BRANCH = ([ENV["BUILDKITE_PULL_REQUEST_BASE_BRANCH"], ENV["BUILDKITE_BRANCH"], "main"] - [""]).first
 LOCAL_BRANCH = ([ENV["BUILDKITE_BRANCH"], "main"] - [""]).first
@@ -97,7 +97,7 @@ def image_name_for(ruby, suffix = BUILD_ID, short: false)
   if short
     tag
   else
-    "#{IMAGE_BASE}:#{tag}"
+    "#{tag}"
   end
 end
 
@@ -359,14 +359,14 @@ puts YAML.dump("steps" => [
                   "PRE_STEPS",
                   "RACK"
                 ],
-                "image-name" => image_name_for(ruby, short: true),
-                "cache-from" => [
-                  REBUILD_ID && "base:" + image_name_for(ruby, REBUILD_ID),
-                  PULL_REQUEST && "base:" + image_name_for(ruby, "pr-#{PULL_REQUEST}"),
-                  LOCAL_BRANCH && LOCAL_BRANCH !~ /:/ && "base:" + image_name_for(ruby, "br-#{LOCAL_BRANCH}"),
-                  BASE_BRANCH && "base:" + image_name_for(ruby, "br-#{BASE_BRANCH}"),
-                  "base:" + image_name_for(ruby, "br-main"),
-                ].grep(String).uniq#,
+                "image-name" => image_name_for(ruby, short: true)#,
+                #"cache-from" => [
+                #  REBUILD_ID && "base:" + image_name_for(ruby, REBUILD_ID),
+                #  PULL_REQUEST && "base:" + image_name_for(ruby, "pr-#{PULL_REQUEST}"),
+                #  LOCAL_BRANCH && LOCAL_BRANCH !~ /:/ && "base:" + image_name_for(ruby, "br-#{LOCAL_BRANCH}"),
+                #  BASE_BRANCH && "base:" + image_name_for(ruby, "br-#{BASE_BRANCH}"),
+                #  "base:" + image_name_for(ruby, "br-main"),
+                #].grep(String).uniq#,
                 #"push" => [
                 #  LOCAL_BRANCH =~ /:/ ?
                 #  "base:" + image_name_for(ruby, "pr-#{PULL_REQUEST}") :
