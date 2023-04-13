@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Based on Sam Ruby's system test from dockerfile-rails:
+# https://github.com/rubys/dockerfile-rails/pull/21
+
+require "net/http"
+require "uri"
+
+uri = URI(ARGV[0])
+
+60.times do |i|
+  sleep 0.5
+  begin
+    response = Net::HTTP.get(uri)
+
+    if %w(404 500).include? response.code
+      status = response.code.to_i
+    end
+
+    puts response.body
+    exit status || 0
+  rescue SystemCallError, IOError
+    puts "#{i}/60 Connection to #{uri} refused or timed out, retrying..."
+  end
+end
+
+exit 999
