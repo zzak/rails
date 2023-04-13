@@ -194,7 +194,7 @@ def step_for(subdirectory, rake_task, ruby: nil, service: "default", pre_steps: 
             "RACK"
           ],
           "run" => service,
-          "pull" => service,
+          #"pull" => service,
           "config" => ".buildkite/docker-compose.yml",
           "shell" => ["runner", subdirectory],
         },
@@ -367,11 +367,11 @@ puts YAML.dump("steps" => [
                   BASE_BRANCH && "base:" + image_name_for(ruby, "br-#{BASE_BRANCH}"),
                   "base:" + image_name_for(ruby, "br-main"),
                 ].grep(String).uniq,
-                "push" => [
-                  LOCAL_BRANCH =~ /:/ ?
-                  "base:" + image_name_for(ruby, "pr-#{PULL_REQUEST}") :
-                  "base:" + image_name_for(ruby, "br-#{LOCAL_BRANCH}"),
-                ],
+                #"push" => [
+                #  LOCAL_BRANCH =~ /:/ ?
+                #  "base:" + image_name_for(ruby, "pr-#{PULL_REQUEST}") :
+                #  "base:" + image_name_for(ruby, "br-#{LOCAL_BRANCH}"),
+                #],
                 "image-repository" => IMAGE_BASE,
               },
             },
