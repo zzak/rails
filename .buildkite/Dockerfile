@@ -98,8 +98,8 @@ WORKDIR /rails
 ENV RAILS_ENV=test RACK_ENV=test
 ENV JRUBY_OPTS="--dev -J-Xmx1024M"
 
-ADD .buildkite/await .buildkite/await-all .buildkite/runner /usr/local/bin/
-RUN chmod +x /usr/local/bin/await /usr/local/bin/await-all /usr/local/bin/runner
+ADD .buildkite/runner /usr/local/bin/
+RUN chmod +x /usr/local/bin/runner
 
 # Wildcard ignores missing files; .empty ensures ADD always has at least
 # one valid source: https://stackoverflow.com/a/46801962
