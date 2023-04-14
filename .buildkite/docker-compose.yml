@@ -115,6 +115,10 @@ services:
 
   memcached:
     image: memcached:alpine
+    healthcheck:
+      test: echo stats | nc 127.0.0.1 11211
+      interval: 10s
+      retries: 60
 
   redis:
     image: redis:alpine
@@ -127,6 +131,10 @@ services:
   mysql:
     image: "${MYSQL_IMAGE-mysql:latest}"
     command: "--default-authentication-plugin=mysql_native_password"
+    healthcheck:
+      test: mysqladmin -h localhost -P 3306 ping --silent
+      interval: 10s
+      retries: 60
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     volumes:
@@ -134,16 +142,38 @@ services:
 
   postgres:
     image: "${POSTGRES_IMAGE-postgres:alpine}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     environment:
       POSTGRES_HOST_AUTH_METHOD: "trust"
 
   rabbitmq:
     image: rabbitmq:alpine
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
 
   beanstalkd:
     build:
       context: ./
       dockerfile: Dockerfile.beanstalkd
+    healthcheck:
+      test: "curl -f http://localhost:11300/ || exit 1"
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   chrome:
     image: selenium/standalone-chrome:latest
+    healthcheck:
+      test: "curl -f http://localhost:4444/ || exit 1"
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
