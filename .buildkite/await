@@ -13,7 +13,7 @@ def await(uri)
   60.times do |i|
     sleep 0.5
     begin
-      response = Net::HTTP.get(uri)
+      response = Net::HTTP.get_response(uri.host, uri.path, uri.port)
 
       if %w(404 500).include? response.code
         status = response.code.to_i
