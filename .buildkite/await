@@ -7,24 +7,28 @@
 require "net/http"
 require "uri"
 
-puts ARGV.inspect
+def await(uri)
+  60.times do |i|
+    sleep 0.5
+    begin
+      response = Net::HTTP.get(uri)
 
-uri = URI(ARGV[0])
+      if %w(404 500).include? response.code
+        status = response.code.to_i
+      end
 
-60.times do |i|
-  sleep 0.5
-  begin
-    response = Net::HTTP.get(uri)
-
-    if %w(404 500).include? response.code
-      status = response.code.to_i
+      puts response.body
+      return status || 0
+    rescue SystemCallError, IOError
+      puts "#{i}/60 Connection to #{uri} refused or timed out, retrying..."
     end
-
-    puts response.body
-    exit status || 0
-  rescue SystemCallError, IOError
-    puts "#{i}/60 Connection to #{uri} refused or timed out, retrying..."
   end
 end
 
-exit 999
+args = ARGV.join(" ").split("--")
+args.first.split(" ").each do |arg|
+  uri = URI(arg)
+  await(uri)
+end
+
+system %(#{args.last.strip})
