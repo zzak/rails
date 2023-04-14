@@ -8,6 +8,8 @@ require "net/http"
 require "uri"
 
 def await(uri)
+  puts "Waiting on #{uri}..."
+
   60.times do |i|
     sleep 0.5
     begin
