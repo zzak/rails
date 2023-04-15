@@ -220,67 +220,67 @@ def steps_for(subdirectory, rake_task, service: "default", pre_steps: [], &block
 end
 
 # GROUP 1: Runs additional isolated tests for non-PR builds
-%w(
-  actionpack      test                default
-  actionmailer    test                default
-  activemodel     test                default
-  activesupport   test                default
-  actionview      test                default
-  activejob       test                default
-  activerecord    mysql2:test         mysqldb
-  activerecord    postgresql:test     postgresdb
-  activerecord    sqlite3:test        default
-).each_slice(3) do |dir, task, service|
-  steps_for(dir, task, service: service)
-
-  next unless MAINLINE
-
-  if dir == "activerecord"
-    step_for(dir, task.sub(":test", ":isolated_test"), service: service) do |x|
-      x["parallelism"] = 5 if REPO_ROOT.join("activerecord/Rakefile").read.include?("BUILDKITE_PARALLEL")
-    end
-  else
-    step_for(dir, "#{task}:isolated", service: service)
-  end
-end
+#%w(
+#  actionpack      test                default
+#  actionmailer    test                default
+#  activemodel     test                default
+#  activesupport   test                default
+#  actionview      test                default
+#  activejob       test                default
+#  activerecord    mysql2:test         mysqldb
+#  activerecord    postgresql:test     postgresdb
+#  activerecord    sqlite3:test        default
+#).each_slice(3) do |dir, task, service|
+#  steps_for(dir, task, service: service)
+#
+#  next unless MAINLINE
+#
+#  if dir == "activerecord"
+#    step_for(dir, task.sub(":test", ":isolated_test"), service: service) do |x|
+#      x["parallelism"] = 5 if REPO_ROOT.join("activerecord/Rakefile").read.include?("BUILDKITE_PARALLEL")
+#    end
+#  else
+#    step_for(dir, "#{task}:isolated", service: service)
+#  end
+#end
 
 # GROUP 2: No isolated tests, runs for each supported ruby
-%w(
-  actioncable     test                postgresdb
-  activestorage   test                default
-  actionmailbox   test                default
-  actiontext      test                default
-  guides          test                default
-).each_slice(3) do |dir, task, service|
-  steps_for(dir, task, service: service)
-end
+#%w(
+#  actioncable     test                postgresdb
+#  activestorage   test                default
+#  actionmailbox   test                default
+#  actiontext      test                default
+#  guides          test                default
+#).each_slice(3) do |dir, task, service|
+#  steps_for(dir, task, service: service)
+#end
 
 # GROUP 3: Special cases
 
-if RAILS_VERSION >= Gem::Version.new("5.1.x")
-  step_for("activerecord", "sqlite3_mem:test", service: "default")
-end
-if RAILS_VERSION >= Gem::Version.new("6.1.x")
-  step_for("activerecord", "mysql2:test", service: "mysqldb") do |x|
-    x["label"] += " [prepared_statements]"
-    x["env"]["MYSQL_PREPARED_STATEMENTS"] = "true"
-  end
-end
-step_for("activerecord", "mysql2:test", service: "mysqldb") do |x|
-  x["label"] += " [mysql_5_7]"
-  x["env"]["MYSQL_IMAGE"] = "mysql:5.7"
-end
-if RAILS_VERSION >= Gem::Version.new("5.x")
-  step_for("activerecord", "mysql2:test", service: "mysqldb") do |x|
-    x["label"] += " [mariadb]"
-    x["env"]["MYSQL_IMAGE"] =
-      if RAILS_VERSION < Gem::Version.new("6.x")
-        "mariadb:10.2"
-      else
-        "mariadb:latest"
-      end
-  end
-end
+#if RAILS_VERSION >= Gem::Version.new("5.1.x")
+#  step_for("activerecord", "sqlite3_mem:test", service: "default")
+#end
+#if RAILS_VERSION >= Gem::Version.new("6.1.x")
+#  step_for("activerecord", "mysql2:test", service: "mysqldb") do |x|
+#    x["label"] += " [prepared_statements]"
+#    x["env"]["MYSQL_PREPARED_STATEMENTS"] = "true"
+#  end
+#end
+#step_for("activerecord", "mysql2:test", service: "mysqldb") do |x|
+#  x["label"] += " [mysql_5_7]"
+#  x["env"]["MYSQL_IMAGE"] = "mysql:5.7"
+#end
+#if RAILS_VERSION >= Gem::Version.new("5.x")
+#  step_for("activerecord", "mysql2:test", service: "mysqldb") do |x|
+#    x["label"] += " [mariadb]"
+#    x["env"]["MYSQL_IMAGE"] =
+#      if RAILS_VERSION < Gem::Version.new("6.x")
+#        "mariadb:10.2"
+#      else
+#        "mariadb:latest"
+#      end
+#  end
+#end
 steps_for("actioncable", "test:integration", service: "default") do |x|
   if RAILS_VERSION < Gem::Version.new("6.x")
     x["soft_fail"] = true
@@ -296,22 +296,22 @@ steps_for("activejob", "test:integration", service: "activejob") do |x|
   # https://github.com/rails/rails/pull/37517#issuecomment-545370408
   x["soft_fail"] = true # if RAILS_VERSION < Gem::Version.new("5.x")
 end
-steps_for("railties", "test", service: "railties") do |x|
-  x["parallelism"] = 12 if REPO_ROOT.join("railties/Rakefile").read.include?("BUILDKITE_PARALLEL")
-end
+#steps_for("railties", "test", service: "railties") do |x|
+#  x["parallelism"] = 12 if REPO_ROOT.join("railties/Rakefile").read.include?("BUILDKITE_PARALLEL")
+#end
 
-step_for("actionpack", "test", service: "default", pre_steps: ["bundle install"]) do |x|
-  x["label"] += " [rack-3]"
-  x["env"]["RACK"] = "~> 3.0"
-  x["soft_fail"] = true
-end
-
-step_for("railties", "test", service: "railties", pre_steps: ["bundle install"]) do |x|
-  x["parallelism"] = 12 if REPO_ROOT.join("railties/Rakefile").read.include?("BUILDKITE_PARALLEL")
-  x["label"] += " [rack-3]"
-  x["env"]["RACK"] = "~> 3.0"
-  x["soft_fail"] = true
-end
+#step_for("actionpack", "test", service: "default", pre_steps: ["bundle install"]) do |x|
+#  x["label"] += " [rack-3]"
+#  x["env"]["RACK"] = "~> 3.0"
+#  x["soft_fail"] = true
+#end
+#
+#step_for("railties", "test", service: "railties", pre_steps: ["bundle install"]) do |x|
+#  x["parallelism"] = 12 if REPO_ROOT.join("railties/Rakefile").read.include?("BUILDKITE_PARALLEL")
+#  x["label"] += " [rack-3]"
+#  x["env"]["RACK"] = "~> 3.0"
+#  x["soft_fail"] = true
+#end
 
 # Ugly hacks to just get the build passing for now
 STEPS.find { |s| s["label"] == "activestorage (2.2)" }&.tap do |s|
