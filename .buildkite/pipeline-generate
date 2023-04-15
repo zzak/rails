@@ -19,7 +19,7 @@ REBUILD_ID = ([ENV["BUILDKITE_REBUILT_FROM_BUILD_ID"]] - [""]).first
 MAINLINE = LOCAL_BRANCH == "main" || LOCAL_BRANCH =~ /\A[0-9-]+(?:-stable)?\z/
 
 DOCKER_COMPOSE_PLUGIN = "docker-compose#v3.7.0"
-ARTIFACTS_PLUGIN = "artifacts#v1.2.0"
+#ARTIFACTS_PLUGIN = "artifacts#v1.2.0"
 
 REPO_ROOT = Pathname.new(ARGV.shift || File.expand_path("../..", __FILE__))
 
@@ -182,11 +182,11 @@ def step_for(subdirectory, rake_task, ruby: nil, service: "default", pre_steps: 
     "command" => command,
     "group" => group,
     "plugins" => [
-      {
-        ARTIFACTS_PLUGIN => {
-          "download" => [".buildkite/*", ".buildkite/**/*"],
-        },
-      },
+      #{
+      #  ARTIFACTS_PLUGIN => {
+      #    "download" => [".buildkite/*", ".buildkite/**/*"],
+      #  },
+      #},
       {
         DOCKER_COMPOSE_PLUGIN => {
           "env" => [
@@ -346,11 +346,11 @@ puts YAML.dump("steps" => [
           "label" => ":docker: #{ruby}",
           "key" => "docker-image-#{ruby.gsub(/\W/, "-")}",
           "plugins" => [
-            {
-              ARTIFACTS_PLUGIN => {
-                "download" => [".dockerignore", ".buildkite/*", ".buildkite/**/*"],
-              },
-            },
+            #{
+            #  ARTIFACTS_PLUGIN => {
+            #    "download" => [".dockerignore", ".buildkite/*", ".buildkite/**/*"],
+            #  },
+            #},
             {
               DOCKER_COMPOSE_PLUGIN => {
                 "build" => "base",
