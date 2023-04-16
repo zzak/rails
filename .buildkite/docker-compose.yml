@@ -172,7 +172,7 @@ services:
   chrome:
     image: selenium/standalone-chrome:latest
     healthcheck:
-      test: "curl -f http://localhost:4444/ || exit 1"
+      test: "curl -f http://localhost:4444/ui || exit 1"
       interval: 10s
       timeout: 10s
       retries: 3
