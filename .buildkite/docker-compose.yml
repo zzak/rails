@@ -172,7 +172,7 @@ services:
   chrome:
     image: selenium/standalone-chrome:latest
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:4444"]
+      test: "curl -f http://localhost:4444/ || exit 1"
       interval: 10s
       timeout: 10s
       retries: 3
