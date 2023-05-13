@@ -1,0 +1,39 @@
+# This file is never read -- it's just a copy of the pipeline's
+# configuration in the Buildkite UI.
+
+# This config is intended for running the rails/buildkite-config CI.
+
+steps:
+  - name: ":pipeline:"
+    command: |
+      PATH=/bin:/usr/bin
+      set -e
+
+      echo "$${PWD}"
+      ls -aslh
+
+      #echo "+++ Cloning rails/rails"
+      #cd ../
+      #rm -rf rails
+      #git clone -b "$${RAILS_BRANCH-main}" "https://github.com/$${RAILS_FORK-rails}/rails" --depth 1
+      #rm -rf rails/.git
+      #sh -c "$$PIPELINE_COMMAND"
+
+    plugins:
+      #- artifacts#v1.2.0:
+      #    upload: [".buildkite/**/*", ".buildkite/.dockerignore"]
+    env:
+      #BUILDKITE_BUILD_PATH: /var/lib/buildkite-agent/builds/
+      PIPELINE_COMMAND: >-
+        docker run --rm
+        -v "$$PWD":/app:ro -w /app
+        -e CI
+        -e BUILDKITE_BRANCH
+        -e BUILDKITE_BUILD_ID
+        -e BUILDKITE_PULL_REQUEST
+        -e BUILDKITE_PULL_REQUEST_BASE_BRANCH
+        -e BUILDKITE_REBUILT_FROM_BUILD_ID
+        ruby:latest
+        .buildkite/pipeline-generate |
+        buildkite-agent pipeline upload
+    timeout_in_minutes: 5
