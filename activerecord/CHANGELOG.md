@@ -1,3 +1,7 @@
+*   Introduce `alias_association` feature to allow defining an alias to an existing association.
+
+    *Nikita Vasilevsky*
+
 *   Gracefully handle `Timeout.timeout` firing during connection configuration.
 
     Use of `Timeout.timeout` could result in improperly initialized database connection.

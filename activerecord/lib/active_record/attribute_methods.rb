@@ -51,6 +51,7 @@ module ActiveRecord
       end
 
       def alias_attribute(new_name, old_name)
+        self.querying_aliases = querying_aliases.merge(new_name => old_name)
         super
 
         if @alias_attributes_mass_generated
