@@ -1,3 +1,7 @@
+*   Introduce `alias_association` feature to allow defining an alias to an existing association.
+
+    *Nikita Vasilevsky*
+
 *   Fix checking whether an unpersisted record is `include?`d in a strictly
     loaded `has_and_belongs_to_many` association.
 
