@@ -7,6 +7,7 @@ module ActiveRecord
 
     included do
       class_attribute :_counter_cache_columns, instance_accessor: false, default: []
+      class_attribute :counter_cached_association_names, instance_writer: false, default: []
     end
 
     module ClassMethods
@@ -200,8 +201,8 @@ module ActiveRecord
       def _create_record(attribute_names = self.attribute_names)
         id = super
 
-        each_counter_cached_associations do |association|
-          association.increment_counters
+        counter_cached_association_names.each do |association_name|
+          association(association_name).increment_counters
         end
 
         id
@@ -211,7 +212,8 @@ module ActiveRecord
         affected_rows = super
 
         if affected_rows > 0
-          each_counter_cached_associations do |association|
+          counter_cached_association_names.each do |association_name|
+            association = association(association_name)
             unless destroyed_by_association && _foreign_keys_equal?(destroyed_by_association.foreign_key, association.reflection.foreign_key)
               association.decrement_counters
             end
