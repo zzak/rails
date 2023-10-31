@@ -26,7 +26,7 @@ module ActiveSupport
 
       super
 
-      return unless message.include?(PROJECT_ROOT)
+      #return unless message.include?(PROJECT_ROOT)
       return if ALLOWED_WARNINGS.match?(message)
       return unless ENV["RAILS_STRICT_WARNINGS"] || ENV["CI"]
 
