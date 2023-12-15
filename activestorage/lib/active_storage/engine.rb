@@ -31,6 +31,7 @@ module ActiveStorage
     config.active_storage.paths = ActiveSupport::OrderedOptions.new
     config.active_storage.queues = ActiveSupport::InheritableOptions.new
     config.active_storage.precompile_assets = true
+    config.active_storage.migrations_force_create_table = false
 
     config.active_storage.variable_content_types = %w(
       image/png
