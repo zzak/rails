@@ -3,9 +3,16 @@
 require "service/shared_service_tests"
 require "net/http"
 
-if SERVICE_CONFIGURATIONS[:gcs_public]
+if ActiveStorage::TestHelper.service_available?(:gcs_public)
   class ActiveStorage::Service::GCSPublicServiceTest < ActiveSupport::TestCase
-    SERVICE = ActiveStorage::Service.configure(:gcs_public, SERVICE_CONFIGURATIONS)
+    setup do
+      @old_service = ActiveStorage::Blob.service
+      @service = ActiveStorage::Blob.service = ActiveStorage::Blob.services.fetch(:gcs_public)
+    end
+
+    teardown do
+      ActiveStorage::Blob.service = @old_service
+    end
 
     include ActiveStorage::Service::SharedServiceTests
 
@@ -40,6 +47,4 @@ if SERVICE_CONFIGURATIONS[:gcs_public]
       @service.delete key
     end
   end
-else
-  puts "Skipping GCS Public Service tests because no GCS configuration was supplied"
 end

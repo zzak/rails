@@ -3,8 +3,12 @@
 require "service/shared_service_tests"
 
 class ActiveStorage::Service::DiskServiceTest < ActiveSupport::TestCase
-  tmp_config = { tmp: { service: "Disk", root: File.join(Dir.tmpdir, "active_storage") } }
-  SERVICE = ActiveStorage::Service.configure(:tmp, tmp_config)
+  setup do
+    @tmp_config = {
+      tmp: { service: "Disk", root: File.join(Dir.tmpdir, "active_storage") }
+    }
+    @service = ActiveStorage::Service.configure(:tmp, @tmp_config)
+  end
 
   include ActiveStorage::Service::SharedServiceTests
 
@@ -67,7 +71,7 @@ class ActiveStorage::Service::DiskServiceTest < ActiveSupport::TestCase
   end
 
   test "root" do
-    assert_equal tmp_config.dig(:tmp, :root), @service.root
+    assert_equal @tmp_config.dig(:tmp, :root), @service.root
   end
 
   test "can change root" do
@@ -76,6 +80,6 @@ class ActiveStorage::Service::DiskServiceTest < ActiveSupport::TestCase
 
     assert_equal tmp_path_2, @service.root
   ensure
-    @service.root = tmp_config.dig(:tmp, :root)
+    @service.root = @tmp_config.dig(:tmp, :root)
   end
 end

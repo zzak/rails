@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "database/setup"
 
-if SERVICE_CONFIGURATIONS[:s3] && SERVICE_CONFIGURATIONS[:s3][:access_key_id].present?
+if ActiveStorage::TestHelper.service_available?(:s3)
   class ActiveStorage::S3DirectUploadsControllerTest < ActionDispatch::IntegrationTest
     setup do
       @old_service = ActiveStorage::Blob.service
-      ActiveStorage::Blob.service = ActiveStorage::Service.configure(:s3, SERVICE_CONFIGURATIONS)
+      skip(ci: true) if !ActiveStorage::Blob.services.fetch(:s3)[:access_key_id].present?
+      ActiveStorage::Blob.service = ActiveStorage::Blob.services.fetch(:s3)
     end
 
     teardown do
@@ -37,23 +37,20 @@ if SERVICE_CONFIGURATIONS[:s3] && SERVICE_CONFIGURATIONS[:s3][:access_key_id].pr
         assert_equal checksum, details["checksum"]
         assert_equal metadata, details["metadata"].deep_transform_keys(&:to_sym)
         assert_equal "text/plain", details["content_type"]
-        assert_match SERVICE_CONFIGURATIONS[:s3][:bucket], details["direct_upload"]["url"]
+        assert_match ActiveStorage::Blob.service[:bucket], details["direct_upload"]["url"]
         assert_match(/s3(-[-a-z0-9]+)?\.(\S+)?amazonaws\.com/, details["direct_upload"]["url"])
         assert_equal({ "Content-Type" => "text/plain", "Content-MD5" => checksum, "Content-Disposition" => "inline; filename=\"hello.txt\"; filename*=UTF-8''hello.txt", "x-amz-meta-my_key_3" => "my_value_3" }, details["direct_upload"]["headers"])
       end
     end
   end
-else
-  puts "Skipping S3 Direct Upload tests because no S3 configuration was supplied"
 end
 
-if SERVICE_CONFIGURATIONS[:gcs]
+if ActiveStorage::TestHelper.service_available?(:gcs)
   class ActiveStorage::GCSDirectUploadsControllerTest < ActionDispatch::IntegrationTest
     setup do
-      @config = SERVICE_CONFIGURATIONS[:gcs]
-
       @old_service = ActiveStorage::Blob.service
-      ActiveStorage::Blob.service = ActiveStorage::Service.configure(:gcs, SERVICE_CONFIGURATIONS)
+      ActiveStorage::Blob.service = ActiveStorage::Blob.services.fetch(:gcs)
+      @config = ActiveStorage::Blob.services
     end
 
     teardown do
@@ -88,17 +85,14 @@ if SERVICE_CONFIGURATIONS[:gcs]
       end
     end
   end
-else
-  puts "Skipping GCS Direct Upload tests because no GCS configuration was supplied"
 end
 
-if SERVICE_CONFIGURATIONS[:azure]
+if ActiveStorage::TestHelper.service_available?(:azure)
   class ActiveStorage::AzureStorageDirectUploadsControllerTest < ActionDispatch::IntegrationTest
     setup do
-      @config = SERVICE_CONFIGURATIONS[:azure]
-
       @old_service = ActiveStorage::Blob.service
-      ActiveStorage::Blob.service = ActiveStorage::Service.configure(:azure, SERVICE_CONFIGURATIONS)
+      ActiveStorage::Blob.service = ActiveStorage::Blob.services.fetch(:azure)
+      @config = ActiveStorage::Blob.services
     end
 
     teardown do
@@ -130,8 +124,6 @@ if SERVICE_CONFIGURATIONS[:azure]
       end
     end
   end
-else
-  puts "Skipping Azure Storage Direct Upload tests because no Azure Storage configuration was supplied"
 end
 
 class ActiveStorage::DiskDirectUploadsControllerTest < ActionDispatch::IntegrationTest

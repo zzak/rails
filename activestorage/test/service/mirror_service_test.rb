@@ -3,17 +3,18 @@
 require "service/shared_service_tests"
 
 class ActiveStorage::Service::MirrorServiceTest < ActiveSupport::TestCase
-  mirror_config = (1..3).to_h do |i|
-    [ "mirror_#{i}",
-      service: "Disk",
-      root: Dir.mktmpdir("active_storage_tests_mirror_#{i}") ]
+  setup do
+    mirror_config = (1..3).to_h do |i|
+      [ "mirror_#{i}",
+        service: "Disk",
+        root: Dir.mktmpdir("active_storage_tests_mirror_#{i}") ]
+    end
+    config = mirror_config.merge \
+      mirror:  { service: "Mirror", primary: "primary", mirrors: mirror_config.keys },
+      primary: { service: "Disk", root: Dir.mktmpdir("active_storage_tests_primary") }
+
+    @service = ActiveStorage::Service.configure(:mirror, config)
   end
-
-  config = mirror_config.merge \
-    mirror:  { service: "Mirror", primary: "primary", mirrors: mirror_config.keys },
-    primary: { service: "Disk", root: Dir.mktmpdir("active_storage_tests_primary") }
-
-  SERVICE = ActiveStorage::Service.configure :mirror, config
 
   include ActiveStorage::Service::SharedServiceTests
   include ActiveJob::TestHelper
@@ -59,8 +60,8 @@ class ActiveStorage::Service::MirrorServiceTest < ActiveSupport::TestCase
   test "deleting from all services" do
     @service.delete @key
 
-    assert_not SERVICE.primary.exist?(@key)
-    SERVICE.mirrors.each do |mirror|
+    assert_not @service.primary.exist?(@key)
+    @service.mirrors.each do |mirror|
       assert_not mirror.exist?(@key)
     end
   end

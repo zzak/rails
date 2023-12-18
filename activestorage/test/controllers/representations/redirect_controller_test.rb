@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "database/setup"
 
 class ActiveStorage::Representations::RedirectControllerWithVariantsTest < ActionDispatch::IntegrationTest
   setup do
@@ -134,7 +133,7 @@ class ActiveStorage::Representations::RedirectControllerWithPreviewsWithStrictLo
 end
 
 class ActiveStorage::Representations::RedirectControllerWithOpenRedirectTest < ActionDispatch::IntegrationTest
-  if SERVICE_CONFIGURATIONS[:s3]
+  if ActiveStorage::TestHelper.service_available?(:s3)
     test "showing existing variant stored in s3" do
       with_raise_on_open_redirects(:s3) do
         blob = create_file_blob filename: "racecar.jpg", service_name: :s3
@@ -149,7 +148,7 @@ class ActiveStorage::Representations::RedirectControllerWithOpenRedirectTest < A
     end
   end
 
-  if SERVICE_CONFIGURATIONS[:azure]
+  if ActiveStorage::TestHelper.service_available?(:azure)
     test "showing existing variant stored in azure" do
       with_raise_on_open_redirects(:azure) do
         blob = create_file_blob filename: "racecar.jpg", service_name: :azure
@@ -164,7 +163,7 @@ class ActiveStorage::Representations::RedirectControllerWithOpenRedirectTest < A
     end
   end
 
-  if SERVICE_CONFIGURATIONS[:gcs]
+  if ActiveStorage::TestHelper.service_available?(:gcs)
     test "showing existing variant stored in gcs" do
       with_raise_on_open_redirects(:gcs) do
         blob = create_file_blob filename: "racecar.jpg", service_name: :gcs

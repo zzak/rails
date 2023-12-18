@@ -2,11 +2,17 @@
 
 require "service/shared_service_tests"
 require "net/http"
-require "database/setup"
 
-if SERVICE_CONFIGURATIONS[:s3_public]
+if ActiveStorage::TestHelper.service_available?(:s3_public)
   class ActiveStorage::Service::S3PublicServiceTest < ActiveSupport::TestCase
-    SERVICE = ActiveStorage::Service.configure(:s3_public, SERVICE_CONFIGURATIONS)
+    setup do
+      @old_service = ActiveStorage::Blob.service
+      @service = ActiveStorage::Blob.service = ActiveStorage::Blob.services.fetch(:s3_public)
+    end
+
+    teardown do
+      ActiveStorage::Blob.service = @old_service
+    end
 
     include ActiveStorage::Service::SharedServiceTests
 
@@ -54,6 +60,4 @@ if SERVICE_CONFIGURATIONS[:s3_public]
       @service.delete key
     end
   end
-else
-  puts "Skipping S3 Public Service tests because no S3 configuration was supplied"
 end

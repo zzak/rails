@@ -3,9 +3,16 @@
 require "service/shared_service_tests"
 require "uri"
 
-if SERVICE_CONFIGURATIONS[:azure_public]
+if ActiveStorage::TestHelper.service_available?(:azure_public)
   class ActiveStorage::Service::AzureStoragePublicServiceTest < ActiveSupport::TestCase
-    SERVICE = ActiveStorage::Service.configure(:azure_public, SERVICE_CONFIGURATIONS)
+    setup do
+      @old_service = ActiveStorage::Blob.service
+      @service = ActiveStorage::Blob.service = ActiveStorage::Blob.services.fetch(:azure_public)
+    end
+
+    teardown do
+      ActiveStorage::Blob.service = @old_service
+    end
 
     include ActiveStorage::Service::SharedServiceTests
 
@@ -42,6 +49,4 @@ if SERVICE_CONFIGURATIONS[:azure_public]
       @service.delete key
     end
   end
-else
-  puts "Skipping Azure Storage Public Service tests because no Azure configuration was supplied"
 end

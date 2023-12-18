@@ -4,10 +4,12 @@ require "service/shared_service_tests"
 require "net/http"
 
 class ActiveStorage::Service::DiskPublicServiceTest < ActiveSupport::TestCase
-  tmp_config = {
-    tmp_public: { service: "Disk", root: File.join(Dir.tmpdir, "active_storage_public"), public: true }
-  }
-  SERVICE = ActiveStorage::Service.configure(:tmp_public, tmp_config)
+  setup do
+    tmp_config = {
+      tmp_public: { service: "Disk", root: File.join(Dir.tmpdir, "active_storage_public"), public: true }
+    }
+    @service = ActiveStorage::Service.configure(:tmp_public, tmp_config)
+  end
 
   include ActiveStorage::Service::SharedServiceTests
 

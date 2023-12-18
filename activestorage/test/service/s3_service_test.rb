@@ -2,11 +2,17 @@
 
 require "service/shared_service_tests"
 require "net/http"
-require "database/setup"
 
-if SERVICE_CONFIGURATIONS[:s3]
+if ActiveStorage::TestHelper.service_available?(:s3)
   class ActiveStorage::Service::S3ServiceTest < ActiveSupport::TestCase
-    SERVICE = ActiveStorage::Service.configure(:s3, SERVICE_CONFIGURATIONS)
+    setup do
+      @old_service = ActiveStorage::Blob.service
+      @service = ActiveStorage::Blob.service = ActiveStorage::Blob.services.fetch(:s3)
+    end
+
+    teardown do
+      ActiveStorage::Blob.service = @old_service
+    end
 
     include ActiveStorage::Service::SharedServiceTests
 
@@ -195,6 +201,4 @@ if SERVICE_CONFIGURATIONS[:s3]
         ActiveStorage::Service.configure :s3, SERVICE_CONFIGURATIONS.deep_merge(s3: configuration)
       end
   end
-else
-  puts "Skipping S3 Service tests because no S3 configuration was supplied"
 end
