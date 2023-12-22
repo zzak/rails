@@ -32,7 +32,7 @@ class ActiveStorage::VariantTest < ActiveSupport::TestCase
 
   test "resized and monochrome variation of JPEG blob" do
     blob = create_file_blob(filename: "racecar.jpg")
-    variant = blob.variant(resize_to_limit: [100, 100], colourspace: "b-w").processed
+    variant = blob.variant(resize_to_limit: [100, 100], colorspace: "Gray").processed
     assert_match(/racecar\.jpg/, variant.url)
 
     image = read_image(variant)
@@ -43,14 +43,14 @@ class ActiveStorage::VariantTest < ActiveSupport::TestCase
 
   test "monochrome with default variant_processor" do
     blob = create_file_blob(filename: "racecar.jpg")
-    variant = blob.variant(colourspace: "b-w").processed
+    variant = blob.variant(colorspace: "Gray").processed
     image = read_image(variant)
     assert_match(/Gray/, image.colorspace)
   end
 
   test "disabled variation of JPEG blob" do
     blob = create_file_blob(filename: "racecar.jpg")
-    variant = blob.variant(resize_to_limit: [100, 100], colourspace: "srgb").processed
+    variant = blob.variant(resize_to_limit: [100, 100], colorspace: "srgb").processed
     assert_match(/racecar\.jpg/, variant.url)
 
     image = read_image(variant)
