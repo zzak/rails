@@ -71,7 +71,8 @@ module ActionController
           :permit_all_parameters,
           :action_on_unpermitted_parameters,
           :always_permitted_parameters,
-          :wrap_parameters_by_default
+          :wrap_parameters_by_default,
+          :urlsafe_csrf_tokens
         )
 
         filtered_options.each do |k, v|
