@@ -124,28 +124,42 @@ module ActiveRecord
 
       if Process.respond_to?(:fork)
         def test_connection_pool_starts_reaper_in_fork
+          before_stdout = ENV["RAILS_LOG_TO_STDOUT"]
+          ENV["RAILS_LOG_TO_STDOUT"] = "true"
+          puts "test_connection_pool_starts_reaper_in_fork..."
+
           pool_config = duplicated_pool_config(reaping_frequency: "0.0001")
           pool = ConnectionPool.new(pool_config)
           pool.checkout
 
+          puts "test_connection_pool_starts_reaper_in_fork: forking..."
           pid = fork do
             pool = ConnectionPool.new(pool_config)
 
+            puts "test_connection_pool_starts_reaper_in_fork: new_conn_in_thread(pool)..."
             conn, child = new_conn_in_thread(pool)
+            puts "test_connection_pool_starts_reaper_in_fork: child.terminate..."
             child.terminate
 
+            puts "test_connection_pool_starts_reaper_in_fork: wait_for_conn_idle(conn)..."
             wait_for_conn_idle(conn)
+            puts "test_connection_pool_starts_reaper_in_fork: finished wait_for_conn_idle(conn)..."
             if conn.in_use?
+              puts "test_connection_pool_starts_reaper_in_fork: conn.in_use? == true"
               exit!(1)
             else
+              puts "test_connection_pool_starts_reaper_in_fork: conn.in_use? == false"
               exit!(0)
             end
           end
 
+          puts "test_connection_pool_starts_reaper_in_fork: Process.waitpid(pid)"
           Process.waitpid(pid)
           assert_predicate $?, :success?
         ensure
+          puts "test_connection_pool_starts_reaper_in_fork: ensure pool.discard!"
           pool.discard!
+          ENV["RAILS_LOG_TO_STDOUT"] = before_stdout
         end
       end
 

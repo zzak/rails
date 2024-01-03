@@ -216,33 +216,43 @@ module ActiveRecord
         @pool.connections.each { |conn| conn.close if conn.in_use? }
       end
 
-#      def test_idle_timeout_configuration
-#        @pool.disconnect!
-#
-#        config = @db_config.configuration_hash.merge(idle_timeout: "0.02")
-#        db_config = ActiveRecord::DatabaseConfigurations::HashConfig.new(@db_config.env_name, @db_config.name, config)
-#
-#        pool_config = ActiveRecord::ConnectionAdapters::PoolConfig.new(ActiveRecord::Base, db_config, :writing, :default)
-#        @pool = ConnectionPool.new(pool_config)
-#        idle_conn = @pool.checkout
-#        @pool.checkin(idle_conn)
-#
-#        idle_conn.instance_variable_set(
-#          :@idle_since,
-#          Process.clock_gettime(Process::CLOCK_MONOTONIC) - 0.01
-#        )
-#
-#        @pool.flush
-#        assert_equal 1, @pool.connections.length
-#
-#        idle_conn.instance_variable_set(
-#          :@idle_since,
-#          Process.clock_gettime(Process::CLOCK_MONOTONIC) - 0.02
-#        )
-#
-#        @pool.flush
-#        assert_equal 0, @pool.connections.length
-#      end
+      def test_idle_timeout_configuration
+        before_stdout = ENV["RAILS_LOG_TO_STDOUT"]
+        ENV["RAILS_LOG_TO_STDOUT"] = "true"
+        puts "test_idle_timeout_configuration..."
+        @pool.disconnect!
+
+        config = @db_config.configuration_hash.merge(idle_timeout: "0.02")
+        db_config = ActiveRecord::DatabaseConfigurations::HashConfig.new(@db_config.env_name, @db_config.name, config)
+
+        pool_config = ActiveRecord::ConnectionAdapters::PoolConfig.new(ActiveRecord::Base, db_config, :writing, :default)
+        @pool = ConnectionPool.new(pool_config)
+        idle_conn = @pool.checkout
+        @pool.checkin(idle_conn)
+
+        puts "test_idle_timeout_configuration: setting idle since..."
+
+        idle_conn.instance_variable_set(
+          :@idle_since,
+          Process.clock_gettime(Process::CLOCK_MONOTONIC) - 0.01
+        )
+
+        puts "test_idle_timeout_configuration: flushing..."
+        @pool.flush
+        assert_equal 1, @pool.connections.length
+
+        puts "test_idle_timeout_configuration: setting idle since..."
+        idle_conn.instance_variable_set(
+          :@idle_since,
+          Process.clock_gettime(Process::CLOCK_MONOTONIC) - 0.02
+        )
+
+        puts "test_idle_timeout_configuration: last flush..."
+        @pool.flush
+        assert_equal 0, @pool.connections.length
+      ensure
+        ENV["RAILS_LOG_TO_STDOUT"] = before_stdout
+      end
 
       def test_disable_flush
         @pool.disconnect!
