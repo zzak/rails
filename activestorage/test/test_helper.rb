@@ -27,6 +27,9 @@ module ActiveStorage
     config.fixture_paths = [File.expand_path("fixtures", __dir__)]
     config.autoload_paths << File.join(__dir__, "support", "models")
 
+    # Disable logging
+    config.logger = Logger.new(nil)
+
     config.active_storage.service = :local
     # Variant tracking has been true since load_defaults(6.1)
     # However, several tests depend on the defaults being loaded from the old dummy app config.

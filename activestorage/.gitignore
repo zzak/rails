@@ -1,5 +1,4 @@
 /src/
 /test/service/configurations.yml
 /test/support/storage/
-/test/support/log/*.log
 /test/support/tmp/
