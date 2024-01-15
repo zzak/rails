@@ -196,15 +196,15 @@ if ActiveStorage::TestHelper.service_available?(:gcs)
       ensure
         service.delete key
       end
-    end
 
-    test "url with IAM signing" do
-      config_with_iam = { gcs: ActiveStorage::Blob.service.merge({ iam: true }) }
-      service = ActiveStorage::Service.configure(:gcs, config_with_iam)
+      test "url with IAM signing" do
+        config_with_iam = { gcs: ActiveStorage::Blob.service.merge({ iam: true }) }
+        service = ActiveStorage::Service.configure(:gcs, config_with_iam)
 
-      key = SecureRandom.base58(24)
-      assert_match(/storage\.googleapis\.com\/.*response-content-disposition=inline.*test\.txt.*response-content-type=text%2Fplain/,
-        service.url(key, expires_in: 2.minutes, disposition: :inline, filename: ActiveStorage::Filename.new("test.txt"), content_type: "text/plain"))
+        key = SecureRandom.base58(24)
+        assert_match(/storage\.googleapis\.com\/.*response-content-disposition=inline.*test\.txt.*response-content-type=text%2Fplain/,
+          service.url(key, expires_in: 2.minutes, disposition: :inline, filename: ActiveStorage::Filename.new("test.txt"), content_type: "text/plain"))
+      end
     end
   end
 end
