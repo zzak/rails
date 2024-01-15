@@ -190,7 +190,7 @@ class ActiveSupport::TestCase
 
       ActionController::Base.raise_on_open_redirects = true
       # TODO: this only is used on s3/azure/gcs paths
-      #ActiveStorage::Blob.service = ActiveStorage::Service.configure(service, SERVICE_CONFIGURATIONS)
+      # ActiveStorage::Blob.service = ActiveStorage::Service.configure(service, SERVICE_CONFIGURATIONS)
       yield
     ensure
       ActionController::Base.raise_on_open_redirects = old_raise_on_open_redirects

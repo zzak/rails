@@ -187,39 +187,37 @@ class ActiveStorage::BlobTest < ActiveSupport::TestCase
     end
   end
 
- test "URLs expiring in 5 minutes" do
-   blob = create_blob
-   freeze_time do
-     assert_equal expected_url_for(blob), blob.url
-     assert_equal expected_url_for(blob, disposition: :attachment), blob.url(disposition: :attachment)
-   end
- end
- test "URLs force content_type to binary and attachment as content disposition for content types served as binary" do
-   blob = create_blob(content_type: "text/html")
-   freeze_time do
-     assert_equal expected_url_for(blob, disposition: :attachment, content_type: "application/octet-stream"), blob.url
-     assert_equal expected_url_for(blob, disposition: :attachment, content_type: "application/octet-stream"), blob.url(disposition: :inline)
-   end
- end
- test "URLs force attachment as content disposition when the content type is not allowed inline" do
-   blob = create_blob(content_type: "application/zip")
-   freeze_time do
-     assert_equal expected_url_for(blob, disposition: :attachment, content_type: "application/zip"), blob.url
-     assert_equal expected_url_for(blob, disposition: :attachment, content_type: "application/zip"), blob.url(disposition: :inline)
-   end
- end
- test "URLs allow for custom filename" do
-   blob = create_blob(filename: "original.txt")
-   new_filename = ActiveStorage::Filename.new("new.txt")
-   freeze_time do
-     #binding.break
-     #blob.url
-    assert_equal expected_url_for(blob), blob.url
-     assert_equal expected_url_for(blob, filename: new_filename), blob.url(filename: new_filename)
-     assert_equal expected_url_for(blob, filename: new_filename), blob.url(filename: "new.txt")
-     assert_equal expected_url_for(blob, filename: blob.filename), blob.url(filename: nil)
-   end
- end
+  test "URLs expiring in 5 minutes" do
+    blob = create_blob
+    freeze_time do
+      assert_equal expected_url_for(blob), blob.url
+      assert_equal expected_url_for(blob, disposition: :attachment), blob.url(disposition: :attachment)
+    end
+  end
+  test "URLs force content_type to binary and attachment as content disposition for content types served as binary" do
+    blob = create_blob(content_type: "text/html")
+    freeze_time do
+      assert_equal expected_url_for(blob, disposition: :attachment, content_type: "application/octet-stream"), blob.url
+      assert_equal expected_url_for(blob, disposition: :attachment, content_type: "application/octet-stream"), blob.url(disposition: :inline)
+    end
+  end
+  test "URLs force attachment as content disposition when the content type is not allowed inline" do
+    blob = create_blob(content_type: "application/zip")
+    freeze_time do
+      assert_equal expected_url_for(blob, disposition: :attachment, content_type: "application/zip"), blob.url
+      assert_equal expected_url_for(blob, disposition: :attachment, content_type: "application/zip"), blob.url(disposition: :inline)
+    end
+  end
+  test "URLs allow for custom filename" do
+    blob = create_blob(filename: "original.txt")
+    new_filename = ActiveStorage::Filename.new("new.txt")
+    freeze_time do
+      assert_equal expected_url_for(blob), blob.url
+      assert_equal expected_url_for(blob, filename: new_filename), blob.url(filename: new_filename)
+      assert_equal expected_url_for(blob, filename: new_filename), blob.url(filename: "new.txt")
+      assert_equal expected_url_for(blob, filename: blob.filename), blob.url(filename: nil)
+    end
+  end
 
   test "URLs allow for custom options" do
     blob = create_blob(filename: "original.txt")
