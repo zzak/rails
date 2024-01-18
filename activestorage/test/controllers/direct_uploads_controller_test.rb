@@ -80,7 +80,7 @@ if ActiveStorage::TestHelper.service_available?(:gcs)
         assert_equal checksum, details["checksum"]
         assert_equal metadata.deep_stringify_keys, details["metadata"].deep_stringify_keys
         assert_equal "text/plain", details["content_type"]
-        assert_match %r{storage\.googleapis\.com/#{@config[:bucket]}}, details["direct_upload"]["url"]
+        assert_match %r{storage\.googleapis\.com/#{ActiveStorage::Blob.service[:bucket]}}, details["direct_upload"]["url"]
         assert_equal({ "Content-MD5" => checksum, "Content-Disposition" => "inline; filename=\"hello.txt\"; filename*=UTF-8''hello.txt", "x-goog-meta-my_key_3" => "my_value_3" }, details["direct_upload"]["headers"])
       end
     end

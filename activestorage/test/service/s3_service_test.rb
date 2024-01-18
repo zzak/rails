@@ -96,7 +96,7 @@ if ActiveStorage::TestHelper.service_available?(:s3)
         disposition: :inline, filename: ActiveStorage::Filename.new("avatar.png"), content_type: "image/png")
 
       assert_match(/s3(-[-a-z0-9]+)?\.(\S+)?amazonaws.com.*response-content-disposition=inline.*avatar\.png.*response-content-type=image%2Fpng/, url)
-      assert_match SERVICE_CONFIGURATIONS[:s3][:bucket], url
+      assert_match ActiveStorage::Blob.services.fetch(:s3).bucket.name, url
     end
 
     test "uploading with server-side encryption" do
@@ -198,7 +198,7 @@ if ActiveStorage::TestHelper.service_available?(:s3)
 
     private
       def build_service(configuration)
-        ActiveStorage::Service.configure :s3, SERVICE_CONFIGURATIONS.deep_merge(s3: configuration)
+        ActiveStorage::Blob.services.fetch(:s3).class.build(configuration)
       end
   end
 end
