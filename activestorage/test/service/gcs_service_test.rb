@@ -66,17 +66,17 @@ if ActiveStorage::TestHelper.service_available?(:gcs)
 
     test "direct upload with cache control" do
       config_with_cache_control = { gcs: ActiveStorage::Blob.service.merge({ cache_control: "public, max-age=1800" }) }
-      service = ActiveStorage::Service.configure(:gcs, config_with_cache_control)
+      @service = ActiveStorage::Service.configure(:gcs, config_with_cache_control)
 
       key      = SecureRandom.base58(24)
       data     = "Some text"
       checksum = Digest::MD5.base64digest(data)
-      url      = service.url_for_direct_upload(key, expires_in: 5.minutes, content_type: "text/plain", content_length: data.size, checksum: checksum)
+      url      = @service.url_for_direct_upload(key, expires_in: 5.minutes, content_type: "text/plain", content_length: data.size, checksum: checksum)
 
       uri = URI.parse url
       request = Net::HTTP::Put.new uri.request_uri
       request.body = data
-      headers = service.headers_for_direct_upload(key, checksum: checksum, filename: ActiveStorage::Filename.new("test.txt"), disposition: :attachment)
+      headers = @service.headers_for_direct_upload(key, checksum: checksum, filename: ActiveStorage::Filename.new("test.txt"), disposition: :attachment)
       assert_equal("public, max-age=1800", headers["Cache-Control"])
 
       headers.each do |k, v|
@@ -87,11 +87,11 @@ if ActiveStorage::TestHelper.service_available?(:gcs)
         http.request request
       end
 
-      url = service.url(key, expires_in: 2.minutes, disposition: :inline, content_type: "text/html", filename: ActiveStorage::Filename.new("test.html"))
+      url = @service.url(key, expires_in: 2.minutes, disposition: :inline, content_type: "text/html", filename: ActiveStorage::Filename.new("test.html"))
       response = Net::HTTP.get_response(URI(url))
       assert_equal("public, max-age=1800", response["Cache-Control"])
     ensure
-      service.delete(key)
+      @service.delete(key)
     end
 
     test "upload with content_type and content_disposition" do
@@ -127,16 +127,16 @@ if ActiveStorage::TestHelper.service_available?(:gcs)
       data     = "Something else entirely!"
 
       config_with_cache_control = { gcs: ActiveStorage::Blob.service.merge({ cache_control: "public, max-age=1800" }) }
-      service = ActiveStorage::Service.configure(:gcs, config_with_cache_control)
+      @service = ActiveStorage::Service.configure(:gcs, config_with_cache_control)
 
-      service.upload(key, StringIO.new(data), checksum: Digest::MD5.base64digest(data), content_type: "text/plain")
+      @service.upload(key, StringIO.new(data), checksum: Digest::MD5.base64digest(data), content_type: "text/plain")
 
-      url = service.url(key, expires_in: 2.minutes, disposition: :inline, content_type: "text/html", filename: ActiveStorage::Filename.new("test.html"))
+      url = @service.url(key, expires_in: 2.minutes, disposition: :inline, content_type: "text/html", filename: ActiveStorage::Filename.new("test.html"))
 
       response = Net::HTTP.get_response(URI(url))
       assert_equal "public, max-age=1800", response["Cache-Control"]
     ensure
-      service.delete key
+      @service.delete key
     end
 
     test "upload with custom_metadata" do
@@ -176,12 +176,12 @@ if ActiveStorage::TestHelper.service_available?(:gcs)
     if ActiveStorage::TestHelper.service_available?(:gsa_email)
       test "direct upload with IAM signing" do
         config_with_iam = { gcs: ActiveStorage::Blob.service.merge({ iam: true }) }
-        service = ActiveStorage::Service.configure(:gcs, config_with_iam)
+        @service = ActiveStorage::Service.configure(:gcs, config_with_iam)
 
         key      = SecureRandom.base58(24)
         data     = "Some text"
         checksum = Digest::MD5.base64digest(data)
-        url      = service.url_for_direct_upload(key, expires_in: 5.minutes, content_type: "text/plain", content_length: data.size, checksum: checksum)
+        url      = @service.url_for_direct_upload(key, expires_in: 5.minutes, content_type: "text/plain", content_length: data.size, checksum: checksum)
 
         uri = URI.parse(url)
         request = Net::HTTP::Put.new(uri.request_uri)
@@ -192,18 +192,18 @@ if ActiveStorage::TestHelper.service_available?(:gcs)
           http.request request
         end
 
-        assert_equal data, service.download(key)
+        assert_equal data, @service.download(key)
       ensure
-        service.delete key
+        @service.delete key
       end
 
       test "url with IAM signing" do
         config_with_iam = { gcs: ActiveStorage::Blob.service.merge({ iam: true }) }
-        service = ActiveStorage::Service.configure(:gcs, config_with_iam)
+        @service = ActiveStorage::Service.configure(:gcs, config_with_iam)
 
         key = SecureRandom.base58(24)
         assert_match(/storage\.googleapis\.com\/.*response-content-disposition=inline.*test\.txt.*response-content-type=text%2Fplain/,
-          service.url(key, expires_in: 2.minutes, disposition: :inline, filename: ActiveStorage::Filename.new("test.txt"), content_type: "text/plain"))
+          @service.url(key, expires_in: 2.minutes, disposition: :inline, filename: ActiveStorage::Filename.new("test.txt"), content_type: "text/plain"))
       end
     end
   end
