@@ -53,6 +53,7 @@ class ActiveStorage::PreviewTest < ActiveSupport::TestCase
   test "previewing on the writer DB" do
     blob = create_file_blob(filename: "report.pdf", content_type: "application/pdf")
 
+    # TODO: this probably should change
     # prevent_writes option is required because there is no automatic write protection anymore
     ActiveRecord::Base.connected_to(role: ActiveRecord.reading_role, prevent_writes: true) do
       blob.preview(resize_to_limit: [640, 280]).processed

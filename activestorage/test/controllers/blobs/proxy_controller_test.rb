@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require "test_app_helper"
 require "minitest/mock"
 
 class ActiveStorage::Blobs::ProxyControllerTest < ActionDispatch::IntegrationTest

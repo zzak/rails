@@ -13,119 +13,36 @@ require "image_processing/mini_magick"
 
 require "active_record/testing/query_assertions"
 
-require "action_controller"
-require "active_record"
-require "active_job"
-require "active_storage"
-
-require "active_storage/previewer/poppler_pdf_previewer"
-require "active_storage/previewer/mupdf_previewer"
-require "active_storage/previewer/video_previewer"
-
-require "active_storage/analyzer/image_analyzer"
-require "active_storage/analyzer/image_analyzer/image_magick"
-require "active_storage/analyzer/image_analyzer/vips"
-require "active_storage/analyzer/video_analyzer"
-require "active_storage/analyzer/audio_analyzer"
+require "rails"
+require "active_record/railtie"
+require "active_storage/engine"
 
 ActiveStorage::FixtureSet.file_fixture_path = File.expand_path("fixtures/files", __dir__)
 ActiveStorage.verifier = ActiveSupport::MessageVerifier.new("Testing")
 
-require "zeitwerk"
+module ActiveStorage
+  class TestApp < Rails::Application
+    config.eager_load = false
+    config.root = File.join(__dir__, "support")
+    config.fixture_paths = [File.expand_path("fixtures", __dir__)]
+    config.autoload_paths << File.join(__dir__, "support", "models")
 
-loader = Zeitwerk::Loader.new
-loader.tag = "ActiveStorageTests"
-loader.push_dir(File.expand_path("../app/controllers", __dir__))
-loader.push_dir(File.expand_path("../app/controllers/concerns", __dir__))
-loader.push_dir(File.expand_path("../app/jobs", __dir__))
-loader.push_dir(File.expand_path("../app/models", __dir__))
+    # Disable logging
+    config.logger = Logger.new(nil)
 
-loader.push_dir(File.expand_path("support/models", __dir__))
+    config.active_storage.service = :local
+    # Variant tracking has been true since load_defaults(6.1)
+    # However, several tests depend on the defaults being loaded from the old dummy app config.
+    # Since this is the only config option that was dependent upon that assumption, we can keep it here.
+    config.active_storage.track_variants = true
 
-loader.setup
+    # FIXME: need to disable CSRF protection for this test in particular:
+    # test/controllers/direct_uploads_controller_test.rb:128 ("creating new direct upload")
+    config.action_controller.allow_forgery_protection = false
+  end
+end
 
-ActiveStorage.variant_processor = :vips #app.config.active_storage.variant_processor || :mini_magick
-ActiveStorage.previewers        = [ ActiveStorage::Previewer::PopplerPDFPreviewer, ActiveStorage::Previewer::MuPDFPreviewer, ActiveStorage::Previewer::VideoPreviewer ]
-ActiveStorage.analyzers         = [ ActiveStorage::Analyzer::ImageAnalyzer::Vips, ActiveStorage::Analyzer::ImageAnalyzer::ImageMagick, ActiveStorage::Analyzer::VideoAnalyzer, ActiveStorage::Analyzer::AudioAnalyzer ]
-ActiveStorage.paths             = ActiveSupport::OrderedOptions.new
-ActiveStorage.routes_prefix     = "/rails/active_storage"
-ActiveStorage.draw_routes       = true #app.config.active_storage.draw_routes != false
-
-
-ActiveStorage.supported_image_processing_methods = []
-ActiveStorage.unsupported_image_processing_arguments = %w(
-  -debug
-  -display
-  -distribute-cache
-  -help
-  -path
-  -print
-  -set
-  -verbose
-  -version
-  -write
-  -write-mask
-)
-
-ActiveStorage.variable_content_types = %w(
-  image/png
-  image/gif
-  image/jpeg
-  image/tiff
-  image/bmp
-  image/vnd.adobe.photoshop
-  image/vnd.microsoft.icon
-  image/webp
-  image/avif
-  image/heic
-  image/heif
-)
-ActiveStorage.web_image_content_types = %w(
-  image/png
-  image/jpeg
-  image/gif
-)
-ActiveStorage.content_types_to_serve_as_binary = %w(
-  text/html
-  image/svg+xml
-  application/postscript
-  application/x-shockwave-flash
-  text/xml
-  application/xml
-  application/xhtml+xml
-  application/mathml+xml
-  text/cache-manifest
-)
-#ActiveStorage.touch_attachment_records = app.config.active_storage.touch_attachment_records != false
-ActiveStorage.service_urls_expire_in = 5.minutes
-#ActiveStorage.urls_expire_in = app.config.active_storage.urls_expire_in
-ActiveStorage.content_types_allowed_inline = %w(
-  image/webp
-  image/avif
-  image/png
-  image/gif
-  image/jpeg
-  image/tiff
-  image/bmp
-  image/vnd.adobe.photoshop
-  image/vnd.microsoft.icon
-  application/pdf
-)
-ActiveStorage.binary_content_type = "application/octet-stream"
-ActiveStorage.video_preview_arguments = "-y -vframes 1 -f image2"
-
-###
-
-ActiveRecord.include(ActiveStorage::Attached::Model)
-ActiveRecord::Base.include(ActiveStorage::Attached::Model)
-
-require "active_storage/reflection"
-ActiveRecord::Base.include(ActiveStorage::Reflection::ActiveRecordExtensions)
-ActiveRecord::Reflection.singleton_class.prepend(ActiveStorage::Reflection::ReflectionExtension)
-
-require "active_storage/service/registry"
-
-configs = begin
+service_configs = begin
   ActiveSupport::ConfigurationFile.parse(File.expand_path("service/configurations.yml", __dir__)).deep_symbolize_keys
 rescue Errno::ENOENT
   puts "Missing service configuration file in test/service/configurations.yml"
@@ -135,11 +52,11 @@ end
 # Azure service tests are currently failing on the main branch.
 # We temporarily disable them while we get things working again.
 if ENV["BUILDKITE"]
-  configs.delete(:azure)
-  configs.delete(:azure_public)
+  service_configs.delete(:azure)
+  service_configs.delete(:azure_public)
 end
 
-SERVICE_CONFIGURATIONS = configs.merge(
+configs = service_configs.merge(
   "tmp" => { "service" => "Disk", "root" => File.join(Dir.tmpdir, "active_storage") },
   "local" => { "service" => "Disk", "root" => Dir.mktmpdir("active_storage_tests") },
   "local_public" => { "service" => "Disk", "root" => Dir.mktmpdir("active_storage_tests"), "public" => true },
@@ -149,45 +66,30 @@ SERVICE_CONFIGURATIONS = configs.merge(
   "mirror" => { "service" => "Mirror", "primary" => "local", "mirrors" => ["disk_mirror_1", "disk_mirror_2", "disk_mirror_3"] }
 ).deep_stringify_keys
 
-ActiveStorage::Blob.services = ActiveStorage::Service::Registry.new(SERVICE_CONFIGURATIONS)
-
-# NOTE: This broke some tests when set to :tmp
-#ActiveStorage::Blob.service = ActiveStorage::Blob.services.fetch(:local)
-
-ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
-ActiveRecord::Base.logger = ActiveSupport::Logger.new(nil)
-
-require File.expand_path("../db/migrate/20170806125915_create_active_storage_tables.rb", __dir__).to_s
-
-# NOTE: Unless we remove migration_paths will pick up the default migrations in activestorage/db/migrate
-# Then the migration will be loaded twice, which we want to avoid since we need to monkey patch it to remove the dependency on Rails.configuration
-ActiveRecord::Migrator.migrations_paths = nil
-class CreateActiveStorageTables
-  private
-    undef_method :primary_and_foreign_key_types
-    def primary_and_foreign_key_types
-      [:primary_key, :bigint]
-    end
-end
-
-ActiveRecord::Schema.define do
-  CreateActiveStorageTables.new.change
-
-  create_table :groups
-
-  create_table :users do |t|
-    t.string :name
-    t.integer :group_id
-    t.timestamps
-  end
-end
-
-#loader.eager_load(force: true)
+ActiveStorage::TestApp.initialize!
 
 ActiveJob::Base.queue_adapter = :test
 ActiveJob::Base.logger = ActiveSupport::Logger.new(nil)
 
 ActiveStorage.logger = ActiveSupport::Logger.new(nil)
+
+ActiveStorage::Blob.services = ActiveStorage::Service::Registry.new(configs)
+
+# NOTE: This broke some tests when set to :tmp
+ActiveStorage::Blob.service = ActiveStorage::Blob.services.fetch(:local)
+
+ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
+ActiveRecord::Base.logger = ActiveSupport::Logger.new(nil)
+
+ActiveRecord::Schema.define do
+  create_table :users do |t|
+    t.string :name
+    t.integer :group_id
+    t.timestamps
+  end
+
+  create_table :groups
+end
 
 ActiveRecord::Base.connection.migration_context.migrate
 

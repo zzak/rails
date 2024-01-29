@@ -123,6 +123,7 @@ class ActiveStorage::VariantWithRecordTest < ActiveSupport::TestCase
     end
   end
 
+  # TODO: this should be private
   def find_keys_for_representation(filename)
     user = User.create!(name: "Justin")
 

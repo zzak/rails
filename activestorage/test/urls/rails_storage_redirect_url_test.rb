@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require "test_app_helper"
 
 class RailsStorageRedirectUrlTest < ActiveSupport::TestCase
-  include Rails.application.routes.url_helpers
+  include ActiveStorage::TestApp.routes.url_helpers
 
   setup do
     @blob = create_file_blob filename: "racecar.jpg"
