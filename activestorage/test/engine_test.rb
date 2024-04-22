@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "database/setup"
 
 class ActiveStorage::EngineTest < ActiveSupport::TestCase
   test "all default content types are recognized by marcel" do

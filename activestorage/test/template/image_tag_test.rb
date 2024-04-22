@@ -1,10 +1,18 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "database/setup"
+
+require "active_storage/engine/routes"
 
 class ActiveStorage::ImageTagTest < ActionView::TestCase
   tests ActionView::Helpers::AssetTagHelper
+
+  routes = ActionDispatch::Routing::RouteSet.new
+  ActiveStorage::Routes.draw_routes!(routes)
+
+  include ActionView::Helpers::UrlHelper
+  include routes.url_helpers
+  default_url_options[:host] = "http://example.com"
 
   setup do
     @blob = create_file_blob filename: "racecar.jpg"

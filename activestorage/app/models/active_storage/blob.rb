@@ -17,6 +17,8 @@
 # update a blob's metadata on a subsequent pass, but you should not update the key or change the uploaded file.
 # If you need to create a derivative or otherwise change the blob, simply create a new blob and purge the old one.
 class ActiveStorage::Blob < ActiveStorage::Record
+  self.table_name = "active_storage_blobs"
+
   MINIMUM_TOKEN_LENGTH = 28
 
   has_secure_token :key, length: MINIMUM_TOKEN_LENGTH
@@ -164,8 +166,8 @@ class ActiveStorage::Blob < ActiveStorage::Record
     end
 
     def validate_global_service_configuration # :nodoc:
-      if connected? && table_exists? && Rails.configuration.active_storage.service.nil?
-        raise RuntimeError, "Missing Active Storage service name. Specify Active Storage service name for config.active_storage.service in config/environments/#{Rails.env}.rb"
+      if connected? && table_exists? && ActiveStorage::Blob.service.nil?
+        raise RuntimeError, "Missing Active Storage service name. Specify Active Storage service name for config.active_storage.service in config/environments/test.rb"
       end
     end
   end

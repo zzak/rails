@@ -3,7 +3,6 @@
 require "active_support/testing/strict_warnings"
 
 ENV["RAILS_ENV"] ||= "test"
-require_relative "dummy/config/environment.rb"
 
 require "bundler/setup"
 require "active_support"
@@ -14,10 +13,13 @@ require "image_processing/mini_magick"
 
 require "active_record/testing/query_assertions"
 
+require "action_view"
+
 require "active_job"
 ActiveJob::Base.queue_adapter = :test
 ActiveJob::Base.logger = ActiveSupport::Logger.new(nil)
 
+require "active_storage"
 ActiveStorage.logger = ActiveSupport::Logger.new(nil)
 ActiveStorage.verifier = ActiveSupport::MessageVerifier.new("Testing")
 ActiveStorage::FixtureSet.file_fixture_path = File.expand_path("fixtures/files", __dir__)
@@ -126,6 +128,68 @@ require "global_id"
 GlobalID.app = "ActiveStorageExampleApp"
 ActiveRecord::Base.include GlobalID::Identification
 
+require "active_record"
+ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
+ActiveRecord::Base.logger = Logger.new(nil)
+
+ActiveRecord.include(ActiveStorage::Attached::Model)
+ActiveRecord::Base.include(ActiveStorage::Attached::Model)
+
+require "active_storage/reflection"
+ActiveRecord::Base.include(ActiveStorage::Reflection::ActiveRecordExtensions)
+ActiveRecord::Reflection.singleton_class.prepend(ActiveStorage::Reflection::ReflectionExtension)
+
+require "zeitwerk"
+
+loader = Zeitwerk::Loader.new
+loader.tag = "ActiveStorageTests"
+loader.push_dir(File.expand_path("../app/controllers", __dir__))
+loader.push_dir(File.expand_path("../app/controllers/concerns", __dir__))
+loader.push_dir(File.expand_path("../app/jobs", __dir__))
+loader.push_dir(File.expand_path("../app/models", __dir__))
+
+# loader.push_dir(File.expand_path("support/models", __dir__))
+
+loader.setup
+
+require "active_storage/service/registry"
+
+configs = begin
+  ActiveSupport::ConfigurationFile.parse(File.expand_path("service/configurations.yml", __dir__)).deep_symbolize_keys
+rescue Errno::ENOENT
+  puts "Missing service configuration file in test/service/configurations.yml"
+  {}
+end
+
+# Azure service tests are currently failing on the main branch.
+# We temporarily disable them while we get things working again.
+if ENV["BUILDKITE"]
+  configs.delete(:azure)
+  configs.delete(:azure_public)
+end
+
+SERVICE_CONFIGURATIONS = configs.merge(
+  "tmp" => { "service" => "Disk", "root" => File.join(Dir.tmpdir, "active_storage") },
+  "local" => { "service" => "Disk", "root" => Dir.mktmpdir("active_storage_tests") },
+  "local_public" => { "service" => "Disk", "root" => Dir.mktmpdir("active_storage_tests"), "public" => true },
+  "disk_mirror_1" => { "service" => "Disk", "root" => Dir.mktmpdir("active_storage_tests_1") },
+  "disk_mirror_2" => { "service" => "Disk", "root" => Dir.mktmpdir("active_storage_tests_2") },
+  "disk_mirror_3" => { "service" => "Disk", "root" => Dir.mktmpdir("active_storage_tests_3") },
+  "mirror" => { "service" => "Mirror", "primary" => "local", "mirrors" => ["disk_mirror_1", "disk_mirror_2", "disk_mirror_3"] }
+).deep_stringify_keys
+
+ActiveStorage::Blob.services = ActiveStorage::Service::Registry.new(SERVICE_CONFIGURATIONS)
+
+# NOTE: This broke some tests when set to :tmp
+ActiveStorage::Blob.service = ActiveStorage::Blob.services.fetch(:local)
+
+require "./db/migrate/20170806125915_create_active_storage_tables"
+require "database/create_groups_migration.rb"
+require "database/create_users_migration.rb"
+ActiveRecord::Base.connection.pool.migration_context.migrate
+ActiveStorageCreateUsers.migrate(:up)
+ActiveStorageCreateGroups.migrate(:up)
+
 class User < ActiveRecord::Base
   validates :name, presence: true
 
@@ -180,5 +244,86 @@ class Group < ActiveRecord::Base
 
   accepts_nested_attributes_for :users
 end
+
+require "active_storage/previewer/poppler_pdf_previewer"
+require "active_storage/previewer/mupdf_previewer"
+require "active_storage/previewer/video_previewer"
+
+require "active_storage/analyzer/image_analyzer"
+require "active_storage/analyzer/image_analyzer/image_magick"
+require "active_storage/analyzer/image_analyzer/vips"
+require "active_storage/analyzer/video_analyzer"
+require "active_storage/analyzer/audio_analyzer"
+
+
+ActiveStorage.variant_processor = :vips #app.config.active_storage.variant_processor || :mini_magick
+ActiveStorage.previewers        = [ ActiveStorage::Previewer::PopplerPDFPreviewer, ActiveStorage::Previewer::MuPDFPreviewer, ActiveStorage::Previewer::VideoPreviewer ]
+ActiveStorage.analyzers         = [ ActiveStorage::Analyzer::ImageAnalyzer::Vips, ActiveStorage::Analyzer::ImageAnalyzer::ImageMagick, ActiveStorage::Analyzer::VideoAnalyzer, ActiveStorage::Analyzer::AudioAnalyzer ]
+ActiveStorage.paths             = ActiveSupport::OrderedOptions.new
+ActiveStorage.routes_prefix     = "/rails/active_storage"
+ActiveStorage.draw_routes       = true #app.config.active_storage.draw_routes != false
+
+
+ActiveStorage.supported_image_processing_methods = []
+ActiveStorage.unsupported_image_processing_arguments = %w(
+  -debug
+  -display
+  -distribute-cache
+  -help
+  -path
+  -print
+  -set
+  -verbose
+  -version
+  -write
+  -write-mask
+)
+
+ActiveStorage.variable_content_types = %w(
+  image/png
+  image/gif
+  image/jpeg
+  image/tiff
+  image/bmp
+  image/vnd.adobe.photoshop
+  image/vnd.microsoft.icon
+  image/webp
+  image/avif
+  image/heic
+  image/heif
+)
+ActiveStorage.web_image_content_types = %w(
+  image/png
+  image/jpeg
+  image/gif
+)
+ActiveStorage.content_types_to_serve_as_binary = %w(
+  text/html
+  image/svg+xml
+  application/postscript
+  application/x-shockwave-flash
+  text/xml
+  application/xml
+  application/xhtml+xml
+  application/mathml+xml
+  text/cache-manifest
+)
+#ActiveStorage.touch_attachment_records = app.config.active_storage.touch_attachment_records != false
+ActiveStorage.service_urls_expire_in = 5.minutes
+#ActiveStorage.urls_expire_in = app.config.active_storage.urls_expire_in
+ActiveStorage.content_types_allowed_inline = %w(
+  image/webp
+  image/avif
+  image/png
+  image/gif
+  image/jpeg
+  image/tiff
+  image/bmp
+  image/vnd.adobe.photoshop
+  image/vnd.microsoft.icon
+  application/pdf
+)
+ActiveStorage.binary_content_type = "application/octet-stream"
+ActiveStorage.video_preview_arguments = "-y -vframes 1 -f image2"
 
 require_relative "../../tools/test_common"
