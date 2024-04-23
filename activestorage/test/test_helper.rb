@@ -326,4 +326,9 @@ ActiveStorage.content_types_allowed_inline = %w(
 ActiveStorage.binary_content_type = "application/octet-stream"
 ActiveStorage.video_preview_arguments = "-y -vframes 1 -f image2"
 
+# Variant tracking has been true since load_defaults(6.1)
+# However, several tests depend on the defaults being loaded from the old dummy app config.
+# Since this is the only config option that was dependent upon that assumption, we can keep it here.
+ActiveStorage.track_variants = true
+
 require_relative "../../tools/test_common"
