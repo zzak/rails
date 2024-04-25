@@ -129,7 +129,13 @@ GlobalID.app = "ActiveStorageExampleApp"
 ActiveRecord::Base.include GlobalID::Identification
 
 require "active_record"
-ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
+# Writing and reading roles are required for the "previewing on the writer DB" test
+config = {
+  "primary" => { "adapter" => "sqlite3", "database" => ":memory:" },
+  "replica" => { "adapter" => "sqlite3", "database" => ":memory:" },
+}
+ActiveRecord::Base.configurations = config
+ActiveRecord::Base.connects_to(database: { writing: :primary, reading: :replica })
 ActiveRecord::Base.logger = Logger.new(nil)
 
 ActiveRecord.include(ActiveStorage::Attached::Model)
