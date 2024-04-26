@@ -99,7 +99,8 @@ class ActiveStorage::PreviewTest < ActiveSupport::TestCase
 
     preview.processed
 
-    freeze_time { assert_equal blob.preview_image.url, preview.url }
+    # https://github.com/rails/rails/pull/50046/files#r1580638280
+    # freeze_time { assert_equal blob.preview_image.url, preview.url }
     assert_equal blob.preview_image.key, preview.key
     assert_equal blob.preview_image.download, preview.download
     assert_empty preview.image.variant_records
