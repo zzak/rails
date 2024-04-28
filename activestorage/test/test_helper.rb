@@ -270,7 +270,7 @@ ActiveStorage.routes_prefix     = "/rails/active_storage"
 ActiveStorage.draw_routes       = true #app.config.active_storage.draw_routes != false
 
 
-ActiveStorage.supported_image_processing_methods = []
+#ActiveStorage.supported_image_processing_methods = []
 ActiveStorage.unsupported_image_processing_arguments = %w(
   -debug
   -display
