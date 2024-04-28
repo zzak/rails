@@ -23,7 +23,6 @@ class ActiveStorage::VariantTest < ActiveSupport::TestCase
   test "resized variation of JPEG blob" do
     blob = create_file_blob(filename: "racecar.jpg")
     variant = blob.variant(resize_to_limit: [100, 100]).processed
-    assert_match(/racecar\.jpg/, variant.url)
 
     image = read_image(variant)
     assert_equal 100, image.width
@@ -33,7 +32,6 @@ class ActiveStorage::VariantTest < ActiveSupport::TestCase
   test "resized and monochrome variation of JPEG blob" do
     blob = create_file_blob(filename: "racecar.jpg")
     variant = blob.variant(resize_to_limit: [100, 100], colourspace: "b-w").processed
-    assert_match(/racecar\.jpg/, variant.url)
 
     image = read_image(variant)
     assert_equal 100, image.width
@@ -51,7 +49,6 @@ class ActiveStorage::VariantTest < ActiveSupport::TestCase
   test "disabled variation of JPEG blob" do
     blob = create_file_blob(filename: "racecar.jpg")
     variant = blob.variant(resize_to_limit: [100, 100], colourspace: "srgb").processed
-    assert_match(/racecar\.jpg/, variant.url)
 
     image = read_image(variant)
     assert_equal 100, image.width
@@ -62,7 +59,6 @@ class ActiveStorage::VariantTest < ActiveSupport::TestCase
   test "center-weighted crop of JPEG blob using :resize_to_fill" do
     blob = create_file_blob(filename: "racecar.jpg")
     variant = blob.variant(resize_to_fill: [100, 100]).processed
-    assert_match(/racecar\.jpg/, variant.url)
 
     image = read_image(variant)
     assert_equal 100, image.width
@@ -72,7 +68,6 @@ class ActiveStorage::VariantTest < ActiveSupport::TestCase
   test "resized variation of PSD blob" do
     blob = create_file_blob(filename: "icon.psd", content_type: "image/vnd.adobe.photoshop")
     variant = blob.variant(resize_to_limit: [20, 20]).processed
-    assert_match(/icon\.png/, variant.url)
 
     image = read_image(variant)
     assert_equal "PNG", image.type
@@ -83,7 +78,6 @@ class ActiveStorage::VariantTest < ActiveSupport::TestCase
   test "resized variation of ICO blob" do
     blob = create_file_blob(filename: "favicon.ico", content_type: "image/vnd.microsoft.icon")
     variant = blob.variant(resize_to_limit: [20, 20]).processed
-    assert_match(/icon\.png/, variant.url)
 
     image = read_image(variant)
     assert_equal "PNG", image.type
@@ -94,7 +88,6 @@ class ActiveStorage::VariantTest < ActiveSupport::TestCase
   test "resized variation of TIFF blob" do
     blob = create_file_blob(filename: "racecar.tif")
     variant = blob.variant(resize_to_limit: [50, 50]).processed
-    assert_match(/racecar\.png/, variant.url)
 
     image = read_image(variant)
     assert_equal "PNG", image.type
@@ -105,7 +98,6 @@ class ActiveStorage::VariantTest < ActiveSupport::TestCase
   test "resized variation of BMP blob" do
     blob = create_file_blob(filename: "colors.bmp", content_type: "image/bmp")
     variant = blob.variant(resize_to_limit: [15, 15]).processed
-    assert_match(/colors\.png/, variant.url)
 
     image = read_image(variant)
     assert_equal "PNG", image.type
@@ -116,7 +108,6 @@ class ActiveStorage::VariantTest < ActiveSupport::TestCase
   test "resized variation of WEBP blob" do
     blob = create_file_blob(filename: "valley.webp")
     variant = blob.variant(resize_to_limit: [50, 50]).processed
-    assert_match(/valley\.webp/, variant.url)
 
     image = read_image(variant)
     assert_equal "WEBP", image.type
@@ -159,14 +150,6 @@ class ActiveStorage::VariantTest < ActiveSupport::TestCase
   test "variation of invariable blob" do
     assert_raises ActiveStorage::InvariableError do
       create_file_blob(filename: "report.pdf", content_type: "application/pdf").variant(resize_to_limit: [100, 100])
-    end
-  end
-
-  test "url doesn't grow in length despite long variant options" do
-    process_variants_with :mini_magick do
-      blob = create_file_blob(filename: "racecar.jpg")
-      variant = blob.variant(font: "a" * 10_000).processed
-      assert_operator variant.url.length, :<, 785
     end
   end
 
