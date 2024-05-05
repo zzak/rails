@@ -13,6 +13,7 @@ require "image_processing/mini_magick"
 
 require "active_record/testing/query_assertions"
 
+require "action_controller"
 require "action_view"
 
 require "active_job"
