@@ -37,12 +37,18 @@ class ActiveStorage::DiskControllerTest < ActionController::TestCase
     assert_equal 200, response.status
     assert_equal "attachment; filename=\"hello.txt\"; filename*=UTF-8''hello.txt", response.headers["Content-Disposition"]
     assert_equal "text/plain", response.headers["Content-Type"]
+    # TODO: response.body is a Rack::Files::Iterator, must use stream to get content
     assert_equal "Hello world!", File.read(response.stream.path)
   end
 
   test "showing blob range" do
     blob = create_blob
-    get blob.url, headers: { "Range" => "bytes=5-9" }
+    encoded_key = generate_encoded_key(blob, disposition: :attachment)
+    @request.headers["Range"] = "bytes=5-9"
+    get :show, params: {
+      encoded_key:,
+      filename: blob.filename
+    }
     assert_response :partial_content
     assert_equal "attachment; filename=\"hello.txt\"; filename*=UTF-8''hello.txt", response.headers["Content-Disposition"]
     assert_equal "text/plain", response.headers["Content-Type"]
@@ -51,7 +57,12 @@ class ActiveStorage::DiskControllerTest < ActionController::TestCase
 
   test "showing blob with invalid range" do
     blob = create_blob
-    get blob.url, headers: { "Range" => "bytes=1000-1000" }
+    encoded_key = generate_encoded_key(blob, disposition: :attachment)
+    @request.headers["Range"] = "bytes=1000-1000"
+    get :show, params: {
+      encoded_key:,
+      filename: blob.filename
+    }
     assert_response :range_not_satisfiable
   end
 
@@ -59,22 +70,34 @@ class ActiveStorage::DiskControllerTest < ActionController::TestCase
     blob = create_blob
     blob.delete
 
-    get blob.url
+    encoded_key = generate_encoded_key(blob, disposition: :attachment)
+    get :show, params: {
+      encoded_key:,
+      filename: blob.filename
+    }
+
+    assert_response :not_found
   end
 
   test "showing blob with invalid key" do
-    get rails_disk_service_url(encoded_key: "Invalid key", filename: "hello.txt")
+    get :show, params: { encoded_key: "Invalid key", filename: "hello.txt" }
     assert_response :not_found
   end
 
   test "showing public blob" do
     with_service("local_public") do
       blob = create_blob(content_type: "image/jpeg")
+      encoded_key = generate_encoded_key(blob, disposition: :attachment)
 
-      get blob.url
-      assert_response :ok
+      get :show, params: {
+        encoded_key:,
+        filename: blob.filename
+      }
+
+      assert_equal 200, response.status
       assert_equal "image/jpeg", response.headers["Content-Type"]
-      assert_equal "Hello world!", response.body
+      # TODO: response.body is a Rack::Files::Iterator, must use stream to get content
+      assert_equal "Hello world!", File.read(response.stream.path)
     end
   end
 
@@ -82,12 +105,19 @@ class ActiveStorage::DiskControllerTest < ActionController::TestCase
     with_service("local_public") do
       blob = create_file_blob.variant(resize_to_limit: [100, 100]).processed
 
-      get blob.url
-      assert_response :ok
+      encoded_key = generate_encoded_key(blob, disposition: :attachment)
+
+      get :show, params: {
+        encoded_key:,
+        filename: blob.filename
+      }
+
+      assert_equal 200, response.status
       assert_equal "image/jpeg", response.headers["Content-Type"]
     end
   end
 
+  # TODO: should these tests move to direct upload controller?
   test "directly uploading blob with integrity" do
     data = "Something else entirely!"
     blob = create_blob_before_direct_upload byte_size: data.size, checksum: OpenSSL::Digest::MD5.base64digest(data)
