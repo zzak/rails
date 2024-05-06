@@ -1,11 +1,17 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "database/setup"
+
+require "active_storage/engine/routes"
 
 if SERVICE_CONFIGURATIONS[:s3] && SERVICE_CONFIGURATIONS[:s3][:access_key_id].present?
-  class ActiveStorage::S3DirectUploadsControllerTest < ActionDispatch::IntegrationTest
+  class ActiveStorage::S3DirectUploadsControllerTest < ActionController::TestCase
+    tests ActiveStorage::DirectUploadsController
+
     setup do
+      @routes = ActionDispatch::Routing::RouteSet.new
+      ActiveStorage::Routes.draw_routes!(@routes)
+
       @old_service = ActiveStorage::Blob.service
       ActiveStorage::Blob.service = ActiveStorage::Service.configure(:s3, SERVICE_CONFIGURATIONS)
     end
@@ -27,7 +33,7 @@ if SERVICE_CONFIGURATIONS[:s3] && SERVICE_CONFIGURATIONS[:s3][:access_key_id].pr
         }
       }
 
-      post rails_direct_uploads_url, params: { blob: {
+      post :create, params: { blob: {
         filename: "hello.txt", byte_size: 6, checksum: checksum, content_type: "text/plain", metadata: metadata } }
 
       response.parsed_body.tap do |details|
@@ -48,8 +54,13 @@ else
 end
 
 if SERVICE_CONFIGURATIONS[:gcs]
-  class ActiveStorage::GCSDirectUploadsControllerTest < ActionDispatch::IntegrationTest
+  class ActiveStorage::GCSDirectUploadsControllerTest < ActionController::TestCase
+    tests ActiveStorage::DirectUploadsController
+
     setup do
+      @routes = ActionDispatch::Routing::RouteSet.new
+      ActiveStorage::Routes.draw_routes!(@routes)
+
       @config = SERVICE_CONFIGURATIONS[:gcs]
 
       @old_service = ActiveStorage::Blob.service
@@ -73,7 +84,7 @@ if SERVICE_CONFIGURATIONS[:gcs]
         }
       }
 
-      post rails_direct_uploads_url, params: { blob: {
+      post :create, params: { blob: {
         filename: "hello.txt", byte_size: 6, checksum: checksum, content_type: "text/plain", metadata: metadata } }
 
       response.parsed_body.tap do |details|
@@ -93,8 +104,13 @@ else
 end
 
 if SERVICE_CONFIGURATIONS[:azure]
-  class ActiveStorage::AzureStorageDirectUploadsControllerTest < ActionDispatch::IntegrationTest
+  class ActiveStorage::AzureStorageDirectUploadsControllerTest < ActionController::TestCase
+    tests ActiveStorage::DirectUploadsController
+
     setup do
+      @routes = ActionDispatch::Routing::RouteSet.new
+      ActiveStorage::Routes.draw_routes!(@routes)
+
       @config = SERVICE_CONFIGURATIONS[:azure]
 
       @old_service = ActiveStorage::Blob.service
@@ -115,7 +131,7 @@ if SERVICE_CONFIGURATIONS[:azure]
         "library_ID" => "12345"
       }
 
-      post rails_direct_uploads_url, params: { blob: {
+      post :create, params: { blob: {
         filename: "hello.txt", byte_size: 6, checksum: checksum, content_type: "text/plain", metadata: metadata } }
 
       response.parsed_body.tap do |details|
@@ -134,7 +150,21 @@ else
   puts "Skipping Azure Storage Direct Upload tests because no Azure Storage configuration was supplied"
 end
 
-class ActiveStorage::DiskDirectUploadsControllerTest < ActionDispatch::IntegrationTest
+class ActiveStorage::DiskDirectUploadsControllerTest < ActionController::TestCase
+  tests ActiveStorage::DirectUploadsController
+
+  setup do
+    @routes = ActionDispatch::Routing::RouteSet.new
+    ActiveStorage::Routes.draw_routes!(@routes)
+
+    @old_service = ActiveStorage::Blob.service
+    ActiveStorage::Blob.service = ActiveStorage::Service.configure(:s3, SERVICE_CONFIGURATIONS)
+
+    # FIXME: need to disable CSRF protection for this test in particular:
+    # test/controllers/direct_uploads_controller_test.rb:128 ("creating new direct upload")
+    @controller.allow_forgery_protection = false
+  end
+
   test "creating new direct upload" do
     checksum = OpenSSL::Digest::MD5.base64digest("Hello")
     metadata = {
@@ -145,7 +175,7 @@ class ActiveStorage::DiskDirectUploadsControllerTest < ActionDispatch::Integrati
       "library_ID" => "12345"
     }
 
-    post rails_direct_uploads_url, params: { blob: {
+    post :create, params: { blob: {
       filename: "hello.txt", byte_size: 6, checksum: checksum, content_type: "text/plain", metadata: metadata } }
 
     response.parsed_body.tap do |details|
@@ -171,7 +201,7 @@ class ActiveStorage::DiskDirectUploadsControllerTest < ActionDispatch::Integrati
     }
 
     set_include_root_in_json(true) do
-      post rails_direct_uploads_url, params: { blob: {
+      post :create, params: { blob: {
         filename: "hello.txt", byte_size: 6, checksum: checksum, content_type: "text/plain", metadata: metadata } }
     end
 
