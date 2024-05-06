@@ -9,12 +9,6 @@ class ActiveStorage::Blobs::ProxyControllerTest < ActionController::TestCase
   def setup
     @routes = ActionDispatch::Routing::RouteSet.new
     ActiveStorage::Routes.draw_routes!(@routes)
-
-    @was_resolve_model_to_route, ActiveStorage.resolve_model_to_route = ActiveStorage.resolve_model_to_route, :rails_storage_proxy
-  end
-
-  def teardown
-    ActiveStorage.resolve_model_to_route = @was_resolve_model_to_route
   end
 
   test "invalid signed ID" do
