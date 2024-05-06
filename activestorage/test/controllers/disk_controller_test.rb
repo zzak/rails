@@ -1,26 +1,43 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "database/setup"
 
-class ActiveStorage::DiskControllerTest < ActionDispatch::IntegrationTest
+require "debug"
+require "active_storage/engine/routes"
+
+class ActiveStorage::DiskControllerTest < ActionController::TestCase
+  tests ActiveStorage::DiskController
+
+  setup do
+    @routes = ActionDispatch::Routing::RouteSet.new
+    ActiveStorage::Routes.draw_routes!(@routes)
+    ActiveStorage::Blob.service.instance_variable_set(:@url_helpers, @routes.url_helpers)
+  end
+
   test "showing blob inline" do
     blob = create_blob(filename: "hello.jpg", content_type: "image/jpeg")
-
-    get blob.url
-    assert_response :ok
+    encoded_key = generate_encoded_key(blob)
+    get :show, params: {
+      encoded_key:,
+      filename: blob.filename}
+    assert_equal 200, response.status
     assert_equal "inline; filename=\"hello.jpg\"; filename*=UTF-8''hello.jpg", response.headers["Content-Disposition"]
     assert_equal "image/jpeg", response.headers["Content-Type"]
-    assert_equal "Hello world!", response.body
+    # TODO: response.body is a Rack::Files::Iterator, must use stream to get content
+    assert_equal "Hello world!", File.read(response.stream.path)
   end
 
   test "showing blob as attachment" do
     blob = create_blob
-    get blob.url(disposition: :attachment)
-    assert_response :ok
+    encoded_key = generate_encoded_key(blob, disposition: :attachment)
+    get :show, params: {
+      encoded_key:,
+      filename: blob.filename
+    }
+    assert_equal 200, response.status
     assert_equal "attachment; filename=\"hello.txt\"; filename*=UTF-8''hello.txt", response.headers["Content-Disposition"]
     assert_equal "text/plain", response.headers["Content-Type"]
-    assert_equal "Hello world!", response.body
+    assert_equal "Hello world!", File.read(response.stream.path)
   end
 
   test "showing blob range" do
@@ -121,5 +138,20 @@ class ActiveStorage::DiskControllerTest < ActionDispatch::IntegrationTest
     put update_rails_disk_service_url(encoded_token: "invalid"),
       params: "Something else entirely!", headers: { "Content-Type" => "text/plain" }
     assert_response :not_found
+  end
+
+  private
+  def generate_encoded_key(blob, disposition: "inline")
+    content_disposition = blob.service.send(:content_disposition_with, filename: blob.filename, type: disposition)
+    verified_key_with_expiration = ActiveStorage.verifier.generate(
+      {
+        key: blob.key,
+        disposition: content_disposition,
+        content_type: blob.content_type,
+        service_name: blob.service.name
+      },
+      expires_in: 5.minutes,
+      purpose: :blob_key
+    )
   end
 end
