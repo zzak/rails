@@ -1,20 +1,26 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "database/setup"
 
-class ActiveStorage::Representations::ProxyControllerWithVariantsTest < ActionDispatch::IntegrationTest
-  setup do
+require "active_storage/engine/routes"
+
+class ActiveStorage::Representations::ProxyControllerWithVariantsTest < ActionController::TestCase
+  tests ActiveStorage::Representations::ProxyController
+
+  def setup
+    @routes = ActionDispatch::Routing::RouteSet.new
+    ActiveStorage::Routes.draw_routes!(@routes)
     @blob = create_file_blob filename: "racecar.jpg"
     @transformations = { resize_to_limit: [100, 100] }
   end
 
   test "showing variant attachment" do
-    get rails_blob_representation_proxy_url(
+    get :show, params: {
       disposition: :attachment,
       filename: @blob.filename,
       signed_blob_id: @blob.signed_id,
-      variation_key: ActiveStorage::Variation.encode(@transformations))
+      variation_key: ActiveStorage::Variation.encode(@transformations)
+    }
 
     assert_response :ok
     assert_match(/^attachment/, response.headers["Content-Disposition"])
@@ -22,10 +28,11 @@ class ActiveStorage::Representations::ProxyControllerWithVariantsTest < ActionDi
   end
 
   test "showing variant inline" do
-    get rails_blob_representation_proxy_url(
+    get :show, params: {
       filename: @blob.filename,
       signed_blob_id: @blob.signed_id,
-      variation_key: ActiveStorage::Variation.encode(@transformations))
+      variation_key: ActiveStorage::Variation.encode(@transformations)
+    }
 
     assert_response :ok
     assert_match(/^inline/, response.headers["Content-Disposition"])
@@ -34,11 +41,12 @@ class ActiveStorage::Representations::ProxyControllerWithVariantsTest < ActionDi
 
   test "showing untracked variant" do
     without_variant_tracking do
-      get rails_blob_representation_proxy_url(
+      get :show, params: {
         disposition: :attachment,
         filename: @blob.filename,
         signed_blob_id: @blob.signed_id,
-        variation_key: ActiveStorage::Variation.encode(@transformations))
+        variation_key: ActiveStorage::Variation.encode(@transformations)
+      }
 
       assert_response :ok
       assert_match(/^attachment/, response.headers["Content-Disposition"])
@@ -47,26 +55,33 @@ class ActiveStorage::Representations::ProxyControllerWithVariantsTest < ActionDi
   end
 
   test "showing variant with invalid signed blob ID" do
-    get rails_blob_representation_proxy_url(
+    get :show, params: {
       filename: @blob.filename,
       signed_blob_id: "invalid",
-      variation_key: ActiveStorage::Variation.encode(@transformations))
+      variation_key: ActiveStorage::Variation.encode(@transformations)
+    }
 
     assert_response :not_found
   end
 
   test "showing variant with invalid variation key" do
-    get rails_blob_representation_proxy_url(
+    get :show, params: {
       filename: @blob.filename,
       signed_blob_id: @blob.signed_id,
-      variation_key: "invalid")
+      variation_key: "invalid"
+    }
 
     assert_response :not_found
   end
 end
 
-class ActiveStorage::Representations::ProxyControllerWithVariantsWithStrictLoadingTest < ActionDispatch::IntegrationTest
+class ActiveStorage::Representations::ProxyControllerWithVariantsWithStrictLoadingTest < ActionController::TestCase
+  tests ActiveStorage::Representations::ProxyController
+
   setup do
+    @routes = ActionDispatch::Routing::RouteSet.new
+    ActiveStorage::Routes.draw_routes!(@routes)
+
     @blob = create_file_blob filename: "racecar.jpg"
     @transformations = { resize_to_limit: [100, 100] }
     @blob.variant(@transformations).processed
@@ -74,10 +89,11 @@ class ActiveStorage::Representations::ProxyControllerWithVariantsWithStrictLoadi
 
   test "showing existing variant record"  do
     with_strict_loading_by_default do
-      get rails_blob_representation_proxy_url(
+      get :show, params: {
         filename: @blob.filename,
         signed_blob_id: @blob.signed_id,
-        variation_key: ActiveStorage::Variation.encode(@transformations))
+        variation_key: ActiveStorage::Variation.encode(@transformations)
+      }
     end
 
     assert_response :ok
@@ -86,17 +102,23 @@ class ActiveStorage::Representations::ProxyControllerWithVariantsWithStrictLoadi
   end
 end
 
-class ActiveStorage::Representations::ProxyControllerWithPreviewsTest < ActionDispatch::IntegrationTest
+class ActiveStorage::Representations::ProxyControllerWithPreviewsTest < ActionController::TestCase
+  tests ActiveStorage::Representations::ProxyController
+
   setup do
+    @routes = ActionDispatch::Routing::RouteSet.new
+    ActiveStorage::Routes.draw_routes!(@routes)
+
     @blob = create_file_blob filename: "report.pdf", content_type: "application/pdf"
     @transformations = { resize_to_limit: [100, 100] }
   end
 
   test "showing preview inline" do
-    get rails_blob_representation_proxy_url(
+    get :show, params: {
       filename: @blob.filename,
       signed_blob_id: @blob.signed_id,
-      variation_key: ActiveStorage::Variation.encode(@transformations))
+      variation_key: ActiveStorage::Variation.encode(@transformations)
+    }
 
     assert_response :ok
     assert_match(/^inline/, response.headers["Content-Disposition"])
@@ -104,26 +126,33 @@ class ActiveStorage::Representations::ProxyControllerWithPreviewsTest < ActionDi
   end
 
   test "showing preview with invalid signed blob ID" do
-    get rails_blob_representation_proxy_url(
+    get :show, params: {
       filename: @blob.filename,
       signed_blob_id: "invalid",
-      variation_key: ActiveStorage::Variation.encode(@transformations))
+      variation_key: ActiveStorage::Variation.encode(@transformations)
+    }
 
     assert_response :not_found
   end
 
   test "showing preview with invalid variation key" do
-    get rails_blob_representation_proxy_url(
+    get :show, params: {
       filename: @blob.filename,
       signed_blob_id: @blob.signed_id,
-      variation_key: "invalid")
+      variation_key: "invalid"
+    }
 
     assert_response :not_found
   end
 end
 
-class ActiveStorage::Representations::ProxyControllerWithPreviewsWithStrictLoadingTest < ActionDispatch::IntegrationTest
+class ActiveStorage::Representations::ProxyControllerWithPreviewsWithStrictLoadingTest < ActionController::TestCase
+  tests ActiveStorage::Representations::ProxyController
+
   setup do
+    @routes = ActionDispatch::Routing::RouteSet.new
+    ActiveStorage::Routes.draw_routes!(@routes)
+
     @blob = create_file_blob filename: "report.pdf", content_type: "application/pdf"
     @transformations = { resize_to_limit: [100, 100] }
     @blob.preview(@transformations).processed
@@ -131,10 +160,11 @@ class ActiveStorage::Representations::ProxyControllerWithPreviewsWithStrictLoadi
 
   test "showing existing preview record" do
     with_strict_loading_by_default do
-      get rails_blob_representation_proxy_url(
+      get :show, params: {
         filename: @blob.filename,
         signed_blob_id: @blob.signed_id,
-        variation_key: ActiveStorage::Variation.encode(@transformations))
+        variation_key: ActiveStorage::Variation.encode(@transformations)
+      }
     end
 
     assert_response :ok
