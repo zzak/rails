@@ -117,56 +117,80 @@ class ActiveStorage::DiskControllerTest < ActionController::TestCase
     end
   end
 
-  # TODO: should these tests move to direct upload controller?
   test "directly uploading blob with integrity" do
-    data = "Something else entirely!"
-    blob = create_blob_before_direct_upload byte_size: data.size, checksum: OpenSSL::Digest::MD5.base64digest(data)
+    # ActionController::TestCase does not support non-hash params to process requests
+    data = { message: "Something else entirely!" }
+    query = data.to_query
+    blob = create_blob_before_direct_upload byte_size: query.size, checksum: OpenSSL::Digest::MD5.base64digest(query)
 
-    put blob.service_url_for_direct_upload, params: data, headers: { "Content-Type" => "text/plain" }
+    encoded_token = generate_encoded_token(blob)
+
+    @request.headers["Content-Type"] = "text/plain"
+
+    put :update, params: { encoded_token:, **data}
     assert_response :no_content
-    assert_equal data, blob.download
+    assert_equal query, blob.download
   end
 
   test "directly uploading blob without integrity" do
-    data = "Something else entirely!"
-    blob = create_blob_before_direct_upload byte_size: data.size, checksum: OpenSSL::Digest::MD5.base64digest("bad data")
+    data = { message: "Something else entirely!" }
+    blob = create_blob_before_direct_upload byte_size: data.to_query.size, checksum: OpenSSL::Digest::MD5.base64digest("bad data")
 
-    put blob.service_url_for_direct_upload, params: data
+    encoded_token = generate_encoded_token(blob)
+
+    put :update, params: { encoded_token:, **data}
     assert_response :unprocessable_entity
     assert_not blob.service.exist?(blob.key)
   end
 
   test "directly uploading blob with mismatched content type" do
-    data = "Something else entirely!"
-    blob = create_blob_before_direct_upload byte_size: data.size, checksum: OpenSSL::Digest::MD5.base64digest(data)
+    # ActionController::TestCase does not support non-hash params to process requests
+    data = { message: "Something else entirely!" }
+    query = data.to_query
+    blob = create_blob_before_direct_upload byte_size: query.size, checksum: OpenSSL::Digest::MD5.base64digest(query)
 
-    put blob.service_url_for_direct_upload, params: data, headers: { "Content-Type" => "application/octet-stream" }
+    encoded_token = generate_encoded_token(blob)
+
+    @request.headers["Content-Type"] = "application/x-gzip"
+
+    put :update, params: { encoded_token:, **data}
     assert_response :unprocessable_entity
     assert_not blob.service.exist?(blob.key)
   end
 
   test "directly uploading blob with different but equivalent content type" do
-    data = "Something else entirely!"
+    data = { message: "Something else entirely!" }
+    query = data.to_query
     blob = create_blob_before_direct_upload(
-      byte_size: data.size, checksum: OpenSSL::Digest::MD5.base64digest(data), content_type: "application/x-gzip")
+      byte_size: query.size, checksum: OpenSSL::Digest::MD5.base64digest(query), content_type: "application/x-gzip")
 
-    put blob.service_url_for_direct_upload, params: data, headers: { "Content-Type" => "application/x-gzip" }
+    encoded_token = generate_encoded_token(blob)
+
+    @request.headers["Content-Type"] = "application/x-gzip"
+
+    put :update, params: { encoded_token:, **data}
     assert_response :no_content
-    assert_equal data, blob.download
+    assert_equal query, blob.download
   end
 
   test "directly uploading blob with mismatched content length" do
-    data = "Something else entirely!"
-    blob = create_blob_before_direct_upload byte_size: data.size - 1, checksum: OpenSSL::Digest::MD5.base64digest(data)
+    data = { message: "Something else entirely!" }
+    query = data.to_query
+    blob = create_blob_before_direct_upload byte_size: query.size - 1, checksum: OpenSSL::Digest::MD5.base64digest(query)
 
-    put blob.service_url_for_direct_upload, params: data, headers: { "Content-Type" => "text/plain" }
+    encoded_token = generate_encoded_token(blob)
+
+    @request.headers["Content-Type"] = "text/plain"
+
+    put :update, params: { encoded_token:, **data}
     assert_response :unprocessable_entity
     assert_not blob.service.exist?(blob.key)
   end
 
   test "directly uploading blob with invalid token" do
-    put update_rails_disk_service_url(encoded_token: "invalid"),
-      params: "Something else entirely!", headers: { "Content-Type" => "text/plain" }
+    data = { message: "Something else entirely!" }
+    @request.headers["Content-Type"] = "text/plain"
+    put :update, params: { encoded_token: "invalid", **data }
     assert_response :not_found
   end
 
@@ -182,6 +206,20 @@ class ActiveStorage::DiskControllerTest < ActionController::TestCase
       },
       expires_in: 5.minutes,
       purpose: :blob_key
+    )
+  end
+
+  def generate_encoded_token(blob)
+    verified_key_with_expiration = ActiveStorage.verifier.generate(
+      {
+        key: blob.key,
+        content_type: blob.content_type,
+        content_length: blob.byte_size,
+        checksum: blob.checksum,
+        service_name: blob.service.name
+      },
+      expires_in: 5.minutes,
+      purpose: :blob_token
     )
   end
 end
