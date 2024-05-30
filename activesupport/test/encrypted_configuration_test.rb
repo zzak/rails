@@ -50,6 +50,11 @@ class EncryptedConfigurationTest < ActiveSupport::TestCase
     assert_equal ({ good: true, bad: false, nested: { foo: "bar" } }), @credentials.something
   end
 
+  test "writing with integer keys" do
+    @credentials.write({ something_else: { 42 => "forty-two" } }.to_yaml)
+    assert_equal "forty-two", @credentials.something_else["42"]
+  end
+
   test "reading comment-only configuration" do
     @credentials.write("# comment")
 

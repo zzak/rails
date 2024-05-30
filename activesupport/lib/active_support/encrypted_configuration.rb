@@ -86,7 +86,7 @@ module ActiveSupport
 
         h = ActiveSupport::OrderedOptions.new
         hash.each do |k, v|
-          h[k] = deep_transform(v)
+          h[k.to_s] = deep_transform(v)
         end
         h
       end
