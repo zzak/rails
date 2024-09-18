@@ -133,6 +133,11 @@ module ActiveJob
       #   ActiveJob::QueueAdapters.lookup(:sidekiq)
       #   # => ActiveJob::QueueAdapters::SidekiqAdapter
       def lookup(name)
+        # Upstream AJ adapter file path scheme (e.g. sidekiq/active_job/adapter)
+        require "#{name.to_s}/active_job/adapter"
+        # Upstream AJ adapter name scheme (e.g. Sidekiq::ActiveJob::Adapter)
+        name.to_s.camelize.constantize.const_get("ActiveJob::Adapter")
+      rescue LoadError, NameError
         const_get(name.to_s.camelize << ADAPTER)
       end
     end
