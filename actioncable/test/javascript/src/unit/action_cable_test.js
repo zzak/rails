@@ -51,7 +51,7 @@ module("ActionCable", () => {
       assert.equal(consumer.url, testURL)
 
       dynamicURL = `${testURL}foo`
-      assert.equal(consumer.url, `${testURL}foo`)
+      assert.equal(consumer.url, `${testURL}fooZomg`)
     })
   })
 })

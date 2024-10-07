@@ -26,7 +26,7 @@ namespace :test do
   end
 
   task :integration do
-    system(Hash[*Base64.decode64(ENV.fetch("ENCODED", "")).split(/[ =]/)], "yarn", "test")
+    system(Hash[*Base64.decode64(ENV.fetch("ENCODED", "")).split(/[ =]/)], "npx web-test-runner --config web-test-runner.config.mjs")
     exit($?.exitstatus) unless $?.success?
   end
 end
