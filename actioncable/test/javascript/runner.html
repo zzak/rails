@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mocha Tests</title>
+  <link rel="stylesheet" href="https://unpkg.com/mocha/mocha.css">
+</head>
+<body>
+  <div id="mocha"></div>
+  <script src="https://unpkg.com/mocha/mocha.js"></script>
+  <script src="https://www.chaijs.com/chai.js"></script>
+
+  <script>
+    mocha.setup('bdd');
+    const assert = chai.assert;
+  </script>
+
+  <script src="compiled/test.js"></script>
+
+  <script>
+    mocha.run();
+  </script>
+</body>
+</html>
