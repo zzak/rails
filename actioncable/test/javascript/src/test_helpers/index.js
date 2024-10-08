@@ -7,4 +7,4 @@ export function defer(callback) {
 }
 
 const originalWebSocket = ActionCable.adapters.WebSocket
-QUnit.testDone(() => ActionCable.adapters.WebSocket = originalWebSocket)
+afterEach(() => ActionCable.adapters.WebSocket = originalWebSocket)

@@ -1,27 +1,29 @@
-import consumerTest from "../test_helpers/consumer_test_helper"
+import consumerTest from "../test_helpers/consumer_test_helper";
 
-const {module} = QUnit
+describe("ActionCable.Consumer", function() {
+  consumerTest("#connect", { connect: false }, function({ consumer, server, assert, done }) {
+    server.on("connection", function() {
+      assert.equal(consumer.connect(), false);
+      done();
+    });
 
-module("ActionCable.Consumer", () => {
-  consumerTest("#connect", {connect: false}, ({consumer, server, assert, done}) => {
-    server.on("connection", () => {
-      assert.equal(consumer.connect(), false)
-      done()
-    })
+    consumer.connect();
+  });
 
-    consumer.connect()
-  })
+  consumerTest("#disconnect", function({ consumer, client, done }) {
+    client.addEventListener("close", () => {
+      done();
+    });
+    consumer.disconnect();
+  });
 
-  consumerTest("#disconnect", ({consumer, client, done}) => {
-    client.addEventListener("close", done)
-    consumer.disconnect()
-  })
+  consumerTest("#addSubProtocol", { subprotocols: "some-subprotocol", timeout: 20000 }, function({ consumer, server, assert, done }) {
+    server.on("connection", function() {
+      assert.equal(consumer.subprotocols.length, 1);
+      assert.equal(consumer.subprotocols[0], "some-subprotocol");
+      done();
+    });
 
-  consumerTest("#addSubProtocol", {subprotocols: "some subprotocol"}, ({consumer, server, assert, done}) => {
-    server.on("connection", () => {
-      assert.equal(consumer.subprotocols.length, 1)
-      assert.equal(consumer.subprotocols[0], "some subprotocol")
-      done()
-    })
-  })
-})
+    consumer.connect();
+  });
+});

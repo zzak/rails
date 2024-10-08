@@ -1,68 +1,66 @@
-import consumerTest from "../test_helpers/consumer_test_helper"
+import consumerTest from "../test_helpers/consumer_test_helper";
 
-const {module} = QUnit
-
-module("ActionCable.Subscription", () => {
-  consumerTest("#initialized callback", ({server, consumer, assert, done}) =>
+describe("ActionCable.Subscription", function() {
+  consumerTest("#initialized callback", function({ server, consumer, assert, done }) {
     consumer.subscriptions.create("chat", {
       initialized() {
-        assert.ok(true)
-        done()
+        assert.ok(true);
+        done();
       }
-    })
-  )
+    });
+  });
 
-  consumerTest("#connected callback", ({server, consumer, assert, done}) => {
+  consumerTest("#connected callback", function({ server, consumer, assert, done }) {
     const subscription = consumer.subscriptions.create("chat", {
-      connected({reconnected}) {
-        assert.ok(true)
-        assert.notOk(reconnected)
-        done()
+      connected({ reconnected }) {
+        assert.ok(true);
+        assert.notOk(reconnected);
+        done();
       }
-    })
+    });
 
-    server.broadcastTo(subscription, {message_type: "confirmation"})
-  })
+    server.broadcastTo(subscription, { message_type: "confirmation" });
+  });
 
-  consumerTest("#connected callback (handling reconnects)", ({server, consumer, connection, monitor, assert, done}) => {
+  consumerTest("#connected callback (handling reconnects)", function({ server, consumer, connection, monitor, assert, done }) {
     const subscription = consumer.subscriptions.create("chat", {
-      connected({reconnected}) {
-        assert.ok(reconnected)
-        done()
+      connected({ reconnected }) {
+        assert.ok(reconnected);
+        done();
       }
-    })
+    });
 
-    monitor.reconnectAttempts = 1
-    server.broadcastTo(subscription, {message_type: "welcome"})
-    server.broadcastTo(subscription, {message_type: "confirmation"})
-  })
+    monitor.reconnectAttempts = 1;
+    server.broadcastTo(subscription, { message_type: "welcome" });
+    server.broadcastTo(subscription, { message_type: "confirmation" });
+  });
 
-  consumerTest("#disconnected callback", ({server, consumer, assert, done}) => {
+  consumerTest("#disconnected callback", function({ server, consumer, assert, done }) {
     const subscription = consumer.subscriptions.create("chat", {
       disconnected() {
-        assert.ok(true)
-        done()
+        assert.ok(true);
+        done();
       }
-    })
+    });
 
-    server.broadcastTo(subscription, {message_type: "confirmation"}, () => server.close())
-  })
+    server.broadcastTo(subscription, { message_type: "confirmation" }, () => server.close());
+  });
 
-  consumerTest("#perform", ({consumer, server, assert, done}) => {
+  consumerTest("#perform", function({ consumer, server, assert, done }) {
     const subscription = consumer.subscriptions.create("chat", {
       connected() {
-        this.perform({publish: "hi"})
+        this.perform({ publish: "hi" });
       }
-    })
+    });
 
-    server.on("message", (message) => {
-      const data = JSON.parse(message)
-      assert.equal(data.identifier, subscription.identifier)
-      assert.equal(data.command, "message")
-      assert.deepEqual(data.data, JSON.stringify({action: { publish: "hi" }}))
-      done()
-    })
+    server.on("message", function(message) {
+      const data = JSON.parse(message);
+      assert.equal(data.identifier, subscription.identifier);
+      assert.equal(data.command, "message");
+      assert.deepEqual(data.data, JSON.stringify({ action: { publish: "hi" }}));
+      done();
+    });
 
-    server.broadcastTo(subscription, {message_type: "confirmation"})
-  })
-})
+    server.broadcastTo(subscription, { message_type: "confirmation" });
+  });
+});
