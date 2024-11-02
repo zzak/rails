@@ -16,6 +16,8 @@ jobs:
         with:
           ruby-version: 3.3
           bundler-cache: true
+        env:
+          BUNDLE_WITHOUT: "db:job:cable:storage"
 
       - name: run test
         run: |
