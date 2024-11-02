@@ -11,10 +11,6 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
 
-      - name: env
-        run: |
-          echo 'export BUNDLE_WITHOUT="db:job"' >> $GITHUB_ENV
-
       - name: setup-ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -24,6 +20,8 @@ jobs:
           BUNDLE_WITHOUT: "db:job"
 
       - name: run test
+        env:
+          BUNDLE_WITHOUT: "db:job"
         run: |
           cd railties
           bin/test test/engine/commands_test.rb
