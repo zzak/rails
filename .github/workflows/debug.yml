@@ -17,7 +17,7 @@ jobs:
           ruby-version: 3.3
           bundler-cache: true
         env:
-          BUNDLE_WITHOUT: "db"
+          BUNDLE_WITHOUT: "db:job"
 
       - name: run test
         run: |
