@@ -64,6 +64,7 @@ class Rails::Engine::CommandsTest < ActiveSupport::TestCase
       pid = spawn_command("server", replica, env: { "RAILS_ENV" => "development" })
       assert_output("Listening on", primary, 100)
 
+      replica.read
       #thread = Thread.new do
         Net::HTTP.new("127.0.0.1", 3000).tap do |net|
           net.get("/")
