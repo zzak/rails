@@ -64,11 +64,11 @@ class Rails::Engine::CommandsTest < ActiveSupport::TestCase
       pid = spawn_command("server", replica, env: { "RAILS_ENV" => "development" })
       assert_output("Listening on", primary)
 
-      thread = Thread.new do
+      #thread = Thread.new do
         Net::HTTP.new("127.0.0.1", 3000).tap do |net|
           net.get("/")
         end
-      end
+      #end
 
       assert_output("Processing by Rails::WelcomeController", primary)
 
@@ -77,7 +77,7 @@ class Rails::Engine::CommandsTest < ActiveSupport::TestCase
         assert_match("Processing by Rails::WelcomeController", logs)
       end
     ensure
-      thread.kill if thread
+      #thread.kill if thread
       kill(pid)
     end
   end
@@ -89,7 +89,7 @@ class Rails::Engine::CommandsTest < ActiveSupport::TestCase
 
     def spawn_command(command, fd, env: {})
       in_plugin_context(plugin_path) do
-        Process.spawn(env, "bin/rails #{command}", in: fd, out: fd, err: fd)
+        Process.spawn(env, "bin/rails #{command}", in: fd, out: STDOUT, err: STDOUT)
       end
     end
 
