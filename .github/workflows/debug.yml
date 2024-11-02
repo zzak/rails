@@ -16,7 +16,7 @@ jobs:
           brew update
           brew install openssl libyaml libksba readline zlib \
                        gmp coreutils libffi imagemagick \
-                       postgresql mysql
+                       postgresql mysql zstd
 
       - name: setup-ruby
         uses: ruby/setup-ruby@v1
