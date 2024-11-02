@@ -13,7 +13,10 @@ jobs:
 
       - name: system deps
         run: |
-          brew install libpq
+          brew update
+          brew install openssl libyaml libksba readline zlib \
+                       gmp coreutils libffi imagemagick \
+                       postgresql mysql
 
       - name: setup-ruby
         uses: ruby/setup-ruby@v1
