@@ -62,19 +62,14 @@ class Rails::Engine::CommandsTest < ActiveSupport::TestCase
     def test_server_command_broadcast_logs
       primary, replica = PTY.open
       pid = spawn_command("server", replica, env: { "RAILS_ENV" => "development" })
-      thread = Thread.new do
-        while (line = replica.gets)
-          puts line
-        end
-      end
 
       assert_output("Listening on", primary, 100)
 
-      #thread = Thread.new do
+      thread = Thread.new do
         Net::HTTP.new("127.0.0.1", 3000).tap do |net|
           net.get("/")
         end
-      #end
+      end
 
       assert_output("Processing by Rails::WelcomeController", primary, 100)
 
