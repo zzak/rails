@@ -1,0 +1,22 @@
+name: Debug railtie test on macos
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: setup-ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.3
+
+      - name: run test
+        run: |
+          cd railties
+          bin/test test/engine/commands_test.rb
+
