@@ -1,6 +1,7 @@
 name: Debug railtie test on macos
 
 on:
+  push:
   workflow_dispatch:
 
 jobs:
