@@ -18,6 +18,11 @@ jobs:
                        gmp coreutils libffi imagemagick \
                        postgresql mysql zstd
 
+          echo 'export LDFLAGS="-L/opt/homebrew/opt/openssl@3/lib -L/opt/homebrew/opt/zstd/lib"' >> $GITHUB_ENV
+          echo 'export CPPFLAGS="-I/opt/homebrew/opt/openssl@3/include -I/opt/homebrew/opt/zstd/include"' >> $GITHUB_ENV
+          echo 'export PKG_CONFIG_PATH="/opt/homebrew/opt/openssl@3/lib/pkgconfig:/opt/homebrew/opt/zstd/lib/pkgconfig"' >> $GITHUB_ENV
+
+
       - name: setup-ruby
         uses: ruby/setup-ruby@v1
         with:
