@@ -62,7 +62,7 @@ class Rails::Engine::CommandsTest < ActiveSupport::TestCase
     def test_server_command_broadcast_logs
       primary, replica = PTY.open
       pid = spawn_command("server", replica, env: { "RAILS_ENV" => "development" })
-      assert_output("Listening on", primary)
+      assert_output("Listening on", primary, 100)
 
       #thread = Thread.new do
         Net::HTTP.new("127.0.0.1", 3000).tap do |net|
@@ -70,7 +70,7 @@ class Rails::Engine::CommandsTest < ActiveSupport::TestCase
         end
       #end
 
-      assert_output("Processing by Rails::WelcomeController", primary)
+      assert_output("Processing by Rails::WelcomeController", primary, 100)
 
       in_plugin_context(plugin_path) do
         logs = File.read("test/dummy/log/development.log")
@@ -89,7 +89,7 @@ class Rails::Engine::CommandsTest < ActiveSupport::TestCase
 
     def spawn_command(command, fd, env: {})
       in_plugin_context(plugin_path) do
-        Process.spawn(env, "bin/rails #{command}", in: fd, out: STDOUT, err: STDOUT)
+        Process.spawn(env, "bin/rails #{command}", in: fd, out: fd, err: fd)
       end
     end
 
