@@ -26,7 +26,18 @@ namespace :test do
   end
 
   task :integration do
-    system(Hash[*Base64.decode64(ENV.fetch("ENCODED", "")).split(/[ =]/)], "yarn", "test")
+    env = Hash[*Base64.decode64(ENV.fetch("ENCODED", "")).split(/[ =]/)]
+
+    if ENV["CI"]
+      env.merge!("DISPLAY" => ":99.0")
+
+      xvfb_pid = Process.spawn("Xvfb", env["DISPLAY"], "-screen", "0", "1024x768x24", out: "/dev/null", err: "/dev/null")
+      at_exit do
+        Process.kill("TERM", xvfb_pid) rescue nil
+      end
+    end
+
+    system(env, "yarn", "test")
     exit($?.exitstatus) unless $?.success?
   end
 end

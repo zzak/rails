@@ -1,5 +1,5 @@
 const config = {
-  browsers: ["ChromeHeadless"],
+  browsers: ["ChromeHeadless", "Firefox"],
   frameworks: ["qunit"],
   files: [
     "test/javascript/compiled/test.js",
@@ -21,7 +21,7 @@ const config = {
   browserNoActivityTimeout: 300000,
 }
 
-if (process.env.CI) {
+if (process.env.CI_TEST_SAUCELABS) {
   config.customLaunchers = {
     sl_chrome: sauce("chrome", 70),
     sl_ff: sauce("firefox", 63),
@@ -55,6 +55,17 @@ if (process.env.CI) {
     return BUILDKITE_JOB_ID
       ? `Buildkite ${BUILDKITE_JOB_ID}`
       : ""
+  }
+} else {
+  config.customLaunchers = {
+    ChromeHeadless: {
+      base: "Chrome",
+      flags: ["--headless", "--no-sandbox", "--disable-dev-shm-usage"],
+    },
+    FirefoxHeadless: {
+      base: "Firefox",
+      flags: ["-headless"],
+    },
   }
 }
 
