@@ -381,6 +381,7 @@ module ActiveRecord
 
         unless valid = record.valid?(context)
           if association.options[:autosave]
+            return if record == self
             record.errors.each { |error|
               self.errors.objects.append(
                 Associations::NestedError.new(association, error)
