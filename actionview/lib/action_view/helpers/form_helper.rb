@@ -448,15 +448,8 @@ module ActionView
           apply_form_for_options!(object, options)
         end
 
-        remote = options.delete(:remote)
-
-        if remote && !embed_authenticity_token_in_remote_forms && options[:authenticity_token].blank?
-          options[:authenticity_token] = false
-        end
-
         options[:model]                               = model
         options[:scope]                               = object_name
-        options[:local]                               = !remote
         options[:skip_default_ids]                    = false
         options[:allow_method_names_outside_object]   = options.fetch(:allow_method_names_outside_object, false)
 
@@ -476,8 +469,6 @@ module ActionView
         )
       end
       private :apply_form_for_options!
-
-      mattr_accessor :form_with_generates_remote_forms, default: true
 
       mattr_accessor :form_with_generates_ids, default: false
 
@@ -1596,7 +1587,6 @@ module ActionView
         def html_options_for_form_with(url_for_options = nil, model = nil, html: {}, local: !form_with_generates_remote_forms,
           skip_enforcing_utf8: nil, **options)
           html_options = options.slice(:id, :class, :multipart, :method, :data, :authenticity_token).merge!(html)
-          html_options[:remote] = html.delete(:remote) || !local
           html_options[:method] ||= :patch if model.respond_to?(:persisted?) && model.persisted?
           if skip_enforcing_utf8.nil?
             if options.key?(:enforce_utf8)

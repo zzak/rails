@@ -23,8 +23,6 @@ module ActionView
       include TextHelper
       include ContentExfiltrationPreventionHelper
 
-      mattr_accessor :embed_authenticity_token_in_remote_forms
-      self.embed_authenticity_token_in_remote_forms = nil
 
       mattr_accessor :default_enforce_utf8, default: true
 
@@ -527,7 +525,6 @@ module ActionView
       def submit_tag(value = "Save changes", options = {})
         options = options.deep_stringify_keys
         tag_options = { "type" => "submit", "name" => "commit", "value" => value }.update(options)
-        set_default_disable_with value, tag_options
         tag :input, tag_options
       end
 
@@ -994,19 +991,6 @@ module ActionView
               html_options["action"] = url_for(url_for_options)
             end
             html_options["accept-charset"] = "UTF-8"
-
-            html_options["data-remote"] = true if html_options.delete("remote")
-
-            if html_options["data-remote"] &&
-               embed_authenticity_token_in_remote_forms == false &&
-               html_options["authenticity_token"].blank?
-              # The authenticity token is taken from the meta tag in this case
-              html_options["authenticity_token"] = false
-            elsif html_options["authenticity_token"] == true
-              # Include the default authenticity_token, which is only generated when its set to nil,
-              # but we needed the true value to override the default of no authenticity_token on data-remote.
-              html_options["authenticity_token"] = nil
-            end
           end
         end
 
@@ -1055,21 +1039,6 @@ module ActionView
         # see http://www.w3.org/TR/html4/types.html#type-name
         def sanitize_to_id(name)
           name.to_s.delete("]").tr("^-a-zA-Z0-9:.", "_")
-        end
-
-        def set_default_disable_with(value, tag_options)
-          data = tag_options.fetch("data", {})
-
-          if tag_options["data-disable-with"] == false || data["disable_with"] == false
-            data.delete("disable_with")
-          elsif ActionView::Base.automatically_disable_submit_tag
-            disable_with_text = tag_options["data-disable-with"]
-            disable_with_text ||= data["disable_with"]
-            disable_with_text ||= value.to_s.clone
-            tag_options.deep_merge!("data" => { "disable_with" => disable_with_text })
-          end
-
-          tag_options.delete("data-disable-with")
         end
 
         def convert_direct_upload_option_to_url(options)

@@ -172,9 +172,6 @@ module ActionView # :nodoc:
     # Specify default_formats that can be rendered.
     cattr_accessor :default_formats
 
-    # Specify whether submit_tag should automatically disable on click
-    cattr_accessor :automatically_disable_submit_tag, default: true
-
     # Annotate rendered view with file names
     cattr_accessor :annotate_rendered_view_with_filenames, default: false
 
