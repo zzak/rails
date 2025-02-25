@@ -1,4 +1,4 @@
-class BroadcastJob < ApplicationJob
+class BroadcastJob < ActiveJob::Base
   def perform(file, message)
     File.write(file, <<~HTML)
       <turbo-stream action="replace" target="message_#{message.id}">

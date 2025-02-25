@@ -25,10 +25,10 @@ class ActionText::JobRenderTest < ActiveJob::TestCase
 
   private
     def with_default_url_options(default_url_options)
-      original_default_url_options = Dummy::Application.default_url_options
-      Dummy::Application.default_url_options = default_url_options
+      original_default_url_options = Rails.application.routes.default_url_options
+      Rails.application.routes.default_url_options = default_url_options
       yield
     ensure
-      Dummy::Application.default_url_options = original_default_url_options
+      Rails.application.routes.default_url_options = original_default_url_options
     end
 end

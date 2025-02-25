@@ -8,7 +8,9 @@ class ActionText::ControllerRenderTest < ActionDispatch::IntegrationTest
     message = Message.create!(content: ActionText::Content.new.append_attachables(blob))
 
     host! "loocalhoost"
+    #binding.break
     get message_path(message)
+    #binding.break
     assert_select "#content img" do |imgs|
       imgs.each { |img| assert_match %r"//loocalhoost/", img["src"] }
     end
