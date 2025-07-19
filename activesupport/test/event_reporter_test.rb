@@ -235,6 +235,19 @@ module ActiveSupport
       assert_equal("Uh oh!", error.message)
     end
 
+    test "#notify with filtered parameters" do
+      previous_filter_parameters = ActiveSupport.filter_parameters
+      ActiveSupport.filter_parameters = [:zomg]
+
+      assert_called_with(@subscriber, :emit, [
+        event_matcher(name: "test_event", payload: { key: "value", zomg: "[FILTERED]" })
+      ]) do
+        @reporter.notify(:test_event, { key: "value", zomg: "secret" })
+      end
+    ensure
+      ActiveSupport.filter_parameters = previous_filter_parameters
+    end
+
     test "#with_debug" do
       @reporter.with_debug do
         assert_predicate @reporter, :debug_mode?
