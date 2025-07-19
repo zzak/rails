@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require "active_support/core_ext/hash/indifferent_access"
+require "active_support/parameter_filter"
 require_relative "event_reporter/encoders"
 
 module ActiveSupport
@@ -476,6 +477,13 @@ module ActiveSupport
         self.class.context_store
       end
 
+      def payload_filter
+        @payload_filter ||= begin
+          mask = ActiveSupport::ParameterFilter::FILTERED
+          ActiveSupport::ParameterFilter.new(ActiveSupport.filter_parameters, mask: mask)
+        end
+      end
+
       def resolve_name(name_or_object)
         case name_or_object
         when String, Symbol
@@ -490,9 +498,9 @@ module ActiveSupport
         when String, Symbol
           handle_unexpected_args(name_or_object, payload, kwargs) if payload && kwargs.any?
           if kwargs.any?
-            kwargs.with_indifferent_access
+            payload_filter.filter(kwargs.with_indifferent_access)
           elsif payload
-            payload.with_indifferent_access
+            payload_filter.filter(payload.with_indifferent_access)
           end
         else
           handle_unexpected_args(name_or_object, payload, kwargs) if payload || kwargs.any?
