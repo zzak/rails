@@ -176,5 +176,10 @@ module ActiveSupport
           app.config.active_support.use_message_serializer_for_metadata
       end
     end
+
+    initializer "active_support.dalli_raw_client", before: :initialize_cache do |app|
+      ActiveSupport::Cache::MemCacheStore.raw_client =
+        app.config.active_support.dalli_raw_client
+    end
   end
 end

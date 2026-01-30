@@ -38,6 +38,8 @@ module ActiveSupport
         true
       end
 
+      class_attribute :raw_client, instance_accessor: false, default: false # :nodoc:
+
       prepend Strategy::LocalCache
 
       ESCAPE_KEY_CHARS = /[\x00-\x20%\x7F-\xFF]/n
@@ -89,9 +91,14 @@ module ActiveSupport
         # The value "compress: false" prevents duplicate compression within Dalli.
         @mem_cache_options[:compress] = false
         (OVERRIDDEN_OPTIONS - %i(compress)).each { |name| @mem_cache_options.delete(name) }
-        # Set the default serializer for Dalli to prevent warning about
-        # inheriting the default serializer.
-        @mem_cache_options[:serializer] = Marshal
+        if self.class.raw_client
+          # Configure Dalli to use the raw strings for marshaling.
+          @mem_cache_options[:raw] = self.class.raw_client
+        else
+          # Set the default serializer for Dalli to prevent warning about
+          # inheriting the default serializer.
+          @mem_cache_options[:serializer] = Marshal
+        end
         @data = self.class.build_mem_cache(*(addresses + [@mem_cache_options]))
       end
 
