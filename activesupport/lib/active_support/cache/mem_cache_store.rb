@@ -38,7 +38,7 @@ module ActiveSupport
         true
       end
 
-      class_attribute :raw_client, instance_accessor: false, default: false # :nodoc:
+      class_attribute :string_fastpath, instance_accessor: false, default: false # :nodoc:
 
       prepend Strategy::LocalCache
 
@@ -91,14 +91,20 @@ module ActiveSupport
         # The value "compress: false" prevents duplicate compression within Dalli.
         @mem_cache_options[:compress] = false
         (OVERRIDDEN_OPTIONS - %i(compress)).each { |name| @mem_cache_options.delete(name) }
-        if self.class.raw_client
-          # Configure Dalli to use the raw strings for marshaling.
-          @mem_cache_options[:raw] = self.class.raw_client
-        else
-          # Set the default serializer for Dalli to prevent warning about
-          # inheriting the default serializer.
-          @mem_cache_options[:serializer] = Marshal
+
+        # Set the default serializer for Dalli to prevent warning about
+        # inheriting the default serializer.
+        @mem_cache_options[:serializer] = Marshal
+
+        if self.class.string_fastpath
+          if dalli_version < Gem::Version.new("4.0.0")
+            # warn
+          else
+            # Configure Dalli to skip serialization for simple strings, improving performance.
+            @mem_cache_options[:string_fastpath] = true
+          end
         end
+
         @data = self.class.build_mem_cache(*(addresses + [@mem_cache_options]))
       end
 
@@ -291,6 +297,10 @@ module ActiveSupport
             source: "mem_cache_store.active_support",
           )
           fallback
+        end
+
+        def dalli_version
+          @dalli_version ||= Gem::Version.new(Dalli::VERSION)
         end
     end
   end

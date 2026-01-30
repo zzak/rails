@@ -177,9 +177,9 @@ module ActiveSupport
       end
     end
 
-    initializer "active_support.dalli_raw_client", before: :initialize_cache do |app|
-      ActiveSupport::Cache::MemCacheStore.raw_client =
-        app.config.active_support.dalli_raw_client
+    initializer "active_support.dalli_string_fastpath", before: :initialize_cache do |app|
+      ActiveSupport::Cache::MemCacheStore.string_fastpath =
+        app.config.active_support.dalli_string_fastpath
     end
   end
 end
