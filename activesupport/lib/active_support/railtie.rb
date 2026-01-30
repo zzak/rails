@@ -176,5 +176,10 @@ module ActiveSupport
           app.config.active_support.use_message_serializer_for_metadata
       end
     end
+
+    initializer "active_support.dalli_string_fastpath", before: :initialize_cache do |app|
+      ActiveSupport::Cache::MemCacheStore.string_fastpath =
+        app.config.active_support.dalli_string_fastpath
+    end
   end
 end

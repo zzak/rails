@@ -38,6 +38,8 @@ module ActiveSupport
         true
       end
 
+      class_attribute :string_fastpath, instance_accessor: false, default: false # :nodoc:
+
       prepend Strategy::LocalCache
 
       ESCAPE_KEY_CHARS = /[\x00-\x20%\x7F-\xFF]/n
@@ -92,6 +94,16 @@ module ActiveSupport
         # Set the default serializer for Dalli to prevent warning about
         # inheriting the default serializer.
         @mem_cache_options[:serializer] = Marshal
+
+        if self.class.string_fastpath
+          if dalli_version < Gem::Version.new("4.0.0")
+            warn "Please upgrade dalli gem in order to use config.active_support.dalli_string_fastpath"
+          else
+            # Configure Dalli to skip serialization for simple strings, improving performance.
+            @mem_cache_options[:string_fastpath] = true
+          end
+        end
+
         @data = self.class.build_mem_cache(*(addresses + [@mem_cache_options]))
       end
 
@@ -210,6 +222,10 @@ module ActiveSupport
             # Set the memcache expire a few minutes in the future to support race condition ttls on read
             expires_in += 5.minutes
           end
+          if @mem_cache_options[:string_fastpath]
+            # Avoid going through serialization in Dalli for simple strings.
+            options[:string_fastpath] = @mem_cache_options[:string_fastpath]
+          end
           rescue_error_with nil do
             # Don't pass compress option to Dalli since we are already dealing with compression.
             options.delete(:compress)
@@ -284,6 +300,10 @@ module ActiveSupport
             source: "mem_cache_store.active_support",
           )
           fallback
+        end
+
+        def dalli_version
+          @dalli_version ||= Gem::Version.new(Dalli::VERSION)
         end
     end
   end
