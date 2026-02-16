@@ -58,7 +58,7 @@ module ActiveRecord
             super,
             @auto_increment,
             @rowid,
-            @virtual,
+            @generated_type,
           ].hash
         end
       end
