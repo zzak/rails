@@ -1,3 +1,16 @@
+*   Introduce `this_week?`, `this_month?`, and `this_year?` methods to Date/Time
+
+    Similar to `today?`, `tomorrow?`, and `yesterday?`, these methods are useful to
+    query time instances against the current period.
+
+    ```ruby
+    unless post.created_at.this_week?
+      link_to "See week recap", week_recap_path(date)
+    end
+    ```
+
+    *Matheus Richard*
+
 *   Removed the deprecated `ActiveSupport::Multibyte::Chars` class.
 
     As well as `String#mb_chars`
