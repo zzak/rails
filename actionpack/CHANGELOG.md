@@ -1,3 +1,20 @@
+*   Add `content_type` option to HTTP authentication methods.
+
+    `request_http_basic_authentication`, `request_http_digest_authentication`,
+    and `request_http_token_authentication` now accept a `content_type`
+    parameter to control the Content-Type of the 401 response. The default
+    behavior is unchanged.
+
+    ```ruby
+    http_basic_authenticate_with(
+      name: "admin", password: "secret",
+      message: '{"error":"Access denied"}',
+      content_type: "application/json"
+    )
+    ```
+
+    *Iliana Hadzhiatanasova*
+
 *   Add `RAILS_HOST_APP_PATH` environment variable to support editor links in devcontainer/Docker environments.
 
     When Rails runs inside a container, file paths in error pages are container-internal paths
