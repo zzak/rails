@@ -6,13 +6,12 @@ require "active_support/inspect_backport"
 class InspectBackportTest < ActiveSupport::TestCase
   test "inspect with no instance variables shows only class and address" do
     klass = Class.new do
-      include ActiveSupport::InspectBackport
-
       private
         def instance_variables_to_inspect
           [].freeze
         end
     end
+    ActiveSupport::InspectBackport.apply(klass)
 
     obj = klass.new
     assert_match(/\A#<#{Regexp.escape(klass.inspect)}:0x[0-9a-f]+>\z/, obj.inspect)
@@ -20,7 +19,6 @@ class InspectBackportTest < ActiveSupport::TestCase
 
   test "inspect with instance variables shows them" do
     klass = Class.new do
-      include ActiveSupport::InspectBackport
       def initialize
         @name = "test"
         @count = 42
@@ -31,6 +29,7 @@ class InspectBackportTest < ActiveSupport::TestCase
           [:@name, :@count].freeze
         end
     end
+    ActiveSupport::InspectBackport.apply(klass)
 
     obj = klass.new
     assert_match(/@name="test"/, obj.inspect)
@@ -44,13 +43,12 @@ class InspectBackportTest < ActiveSupport::TestCase
 
   test "inspect with unset instance variable shows nothing" do
     klass = Class.new do
-      include ActiveSupport::InspectBackport
-
       private
         def instance_variables_to_inspect
           [:@missing].freeze
         end
     end
+    ActiveSupport::InspectBackport.apply(klass)
 
     obj = klass.new
     assert_no_match(/@missing=nil/, obj.inspect)

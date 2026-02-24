@@ -285,7 +285,7 @@ module Rails
       end
     end
 
-    include ActiveSupport::InspectBackport if RUBY_VERSION < "4"
+    ActiveSupport::InspectBackport.apply(self)
 
     def configure(&block) # :nodoc:
       instance_eval(&block)

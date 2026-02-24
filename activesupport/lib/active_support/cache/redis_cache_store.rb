@@ -171,7 +171,7 @@ module ActiveSupport
         super(universal_options)
       end
 
-      include ActiveSupport::InspectBackport if RUBY_VERSION < "4"
+      ActiveSupport::InspectBackport.apply(self)
 
       # Cache Store API implementation.
       #

@@ -43,7 +43,7 @@ module ActiveSupport
       OpenSSL::PKCS5.pbkdf2_hmac(@secret, salt, @iterations, key_size, @hash_digest_class.new)
     end
 
-    include ActiveSupport::InspectBackport if RUBY_VERSION < "4"
+    ActiveSupport::InspectBackport.apply(self)
 
     private
       def instance_variables_to_inspect

@@ -36,7 +36,7 @@ module ActiveSupport
       def delete_matched(matcher, options = nil)
       end
 
-      include ActiveSupport::InspectBackport if RUBY_VERSION < "4"
+      ActiveSupport::InspectBackport.apply(self)
 
       private
         def instance_variables_to_inspect

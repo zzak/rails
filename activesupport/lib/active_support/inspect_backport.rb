@@ -9,7 +9,7 @@ module ActiveSupport
   # classes can define +instance_variables_to_inspect+ on any Ruby version.
   #
   #   class MyClass
-  #     include ActiveSupport::InspectBackport if RUBY_VERSION < "4"
+  #     ActiveSupport::InspectBackport.apply(self)
   #
   #     private
   #       def instance_variables_to_inspect
@@ -17,6 +17,18 @@ module ActiveSupport
   #       end
   #   end
   module InspectBackport # :nodoc:
+    class << self
+      if RUBY_VERSION < "4"
+        def apply(klass)
+          klass.define_method(:inspect, instance_method(:inspect))
+        end
+      else
+        def apply(_)
+          # noop
+        end
+      end
+    end
+
     def inspect
       ivars = instance_variables_to_inspect
       klass = self.class.name || self.class.inspect

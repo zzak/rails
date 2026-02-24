@@ -129,7 +129,7 @@ module ActionText
       to_html
     end
 
-    include ActiveSupport::InspectBackport if RUBY_VERSION < "4"
+    ActiveSupport::InspectBackport.apply(self)
 
     private
       def instance_variables_to_inspect
