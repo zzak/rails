@@ -3,6 +3,8 @@
     Previously, `Content#to_plain_text` would replace a `MissingAttachable` with a blank string.
     Now it renders the same "☒" character used in the HTML representation.
 
+    *Mike Dalessio*
+
 *   Add `to_markdown` to Action Text, mirroring `to_plain_text`.
 
     Converts rich text content to Markdown, supporting headings, bold, italic,
