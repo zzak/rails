@@ -293,6 +293,14 @@ namespace :db do
 
     desc "Rebuild the PostgreSQL test databases"
     task rebuild: [:drop, :build]
+
+    desc "Regenerate well-known PostgreSQL OID mappings from upstream pg_type.dat and pg_range.dat"
+    task :update_well_known_oids do
+      require_relative "lib/active_record/connection_adapters/postgresql/oid/well_known_generator"
+
+      mappings = ActiveRecord::ConnectionAdapters::PostgreSQL::OID::WellKnown::Generator.generate!
+      puts "Updated well_known_values.rb (#{mappings[:type_aliases].size} type aliases, #{mappings[:array_types].size} arrays, #{mappings[:range_types].size} ranges, #{mappings[:domain_types].size} domains)"
+    end
   end
 end
 

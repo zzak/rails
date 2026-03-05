@@ -807,6 +807,7 @@ module ActiveRecord
           self.class.register_class_with_precision m, "timestamp", OID::Timestamp, timezone: @default_timezone
           self.class.register_class_with_precision m, "timestamptz", OID::TimestampWithTimeZone
 
+          OID::WellKnown.register_types(m)
           load_additional_types
 
           @@type_mapping_callbacks = [] unless defined?(@@type_mapping_callbacks)
