@@ -35,57 +35,7 @@ module ActiveRecord
             composites.each { |row| register_composite_type(row) }
           end
 
-          def query_conditions_for_known_type_names
-            known_type_names = unresolved_type_names
-            return if known_type_names.empty?
-
-            <<~SQL % known_type_names.map { |name| "'#{name}'" }.join(", ")
-              WHERE
-                t.typname IN (%s)
-            SQL
-          end
-
-          def query_conditions_for_known_type_types
-            known_type_types = %w('r' 'e' 'd')
-            <<~SQL % known_type_types.join(", ")
-              WHERE
-                t.typtype IN (%s)
-            SQL
-          end
-
-          def query_conditions_for_array_types
-            known_type_oids = unresolved_array_subtype_oids
-            return if known_type_oids.empty?
-
-            <<~SQL % [known_type_oids.join(", ")]
-              WHERE
-                t.typelem IN (%s)
-            SQL
-          end
-
           private
-            def unresolved_type_names
-              known_type_oids = @store.keys.grep(Integer)
-              known_types_by_oid = known_type_oids.map { |oid| @store.lookup(oid) }
-
-              @store.keys.grep(String).reject do |type_name|
-                known_types_by_oid.include?(@store.lookup(type_name))
-              end
-            end
-
-            def unresolved_array_subtype_oids
-              known_type_oids = @store.keys.grep(Integer)
-
-              known_type_oids.reject do |subtype_oid|
-                subtype = @store.lookup(subtype_oid)
-
-                known_type_oids.any? do |oid|
-                  type = @store.lookup(oid)
-                  type.is_a?(OID::Array) && type.subtype == subtype
-                end
-              end
-            end
-
             def register_mapped_type(row)
               alias_type row["oid"], row["typname"]
             end
@@ -107,11 +57,7 @@ module ActiveRecord
             end
 
             def register_domain_type(row)
-              if base_type = @store.lookup(row["typbasetype"].to_i)
-                register row["oid"], base_type
-              else
-                warn "unknown base type (OID: #{row["typbasetype"]}) for domain #{row["typname"]}."
-              end
+              register_with_subtype(row["oid"], row["typbasetype"].to_i) { |subtype| subtype }
             end
 
             def register_composite_type(row)

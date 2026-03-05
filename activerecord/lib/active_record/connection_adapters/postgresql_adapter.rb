@@ -366,6 +366,7 @@ module ActiveRecord
 
         @max_identifier_length = nil
         @type_map = nil
+        @initial_bulk_types_loaded = false
         @raw_connection = nil
         @notice_receiver_sql_warnings = []
 
@@ -395,6 +396,7 @@ module ActiveRecord
           else
             @type_map = Type::HashLookupTypeMap.new
           end
+          @initial_bulk_types_loaded = false
 
           initialize_type_map
         end
@@ -808,7 +810,6 @@ module ActiveRecord
           self.class.register_class_with_precision m, "timestamptz", OID::TimestampWithTimeZone
 
           OID::WellKnown.register_types(m)
-          load_additional_types
 
           @@type_mapping_callbacks = [] unless defined?(@@type_mapping_callbacks)
           @@type_mapping_callbacks.each { |block| block.call(m) }
@@ -925,46 +926,70 @@ module ActiveRecord
         end
 
         def get_oid_type(oid, fmod, column_name, sql_type = "")
-          if !type_map.key?(oid)
-            load_additional_types([oid])
-          end
+          load_additional_types([oid]) unless type_map.key?(oid)
 
-          type_map.fetch(oid, fmod, sql_type) {
-            warn "unknown OID #{oid}: failed to recognize type of '#{column_name}'. It will be treated as String."
-            Type.default_value.tap do |cast_type|
-              type_map.register_type(oid, cast_type)
-            end
-          }
+          type_map.fetch(oid, fmod, sql_type) { register_unknown_oid_type(oid, column_name) }
         end
 
-        def load_additional_types(oids = nil)
+        def load_additional_types(oids)
+          initial_bulk_load = !@initial_bulk_types_loaded
           initializer = OID::TypeMapInitializer.new(type_map)
-          load_types_queries(initializer, oids) do |query|
-            intent = internal_build_intent(query, "SCHEMA", [], allow_retry: true, materialize_transactions: false)
-            intent.execute!
-            records = intent.raw_result
-            initializer.run(records)
-          end
+          load_type_records_with_dependencies(initializer, oids, initial_bulk_load: initial_bulk_load)
+          @initial_bulk_types_loaded = true if initial_bulk_load
         end
 
-        def load_types_queries(initializer, oids)
+        def load_types_queries(oids, initial_bulk_load)
           query = <<~SQL
             SELECT t.oid, t.typname, t.typelem, t.typdelim, t.typinput, r.rngsubtype, t.typtype, t.typbasetype
             FROM pg_type as t
             LEFT JOIN pg_range as r ON oid = rngtypid
           SQL
-          if oids
-            yield query + "WHERE t.oid IN (%s)" % oids.join(", ")
-          else
-            query_conditions = [
-              initializer.query_conditions_for_known_type_names,
-              initializer.query_conditions_for_known_type_types,
-              initializer.query_conditions_for_array_types,
-            ].compact
+          queries = ["#{query}WHERE t.oid IN (#{oids.join(", ")})"]
+          queries << "#{query}WHERE t.typtype IN ('r', 'e', 'd')" if initial_bulk_load
+          yield queries.join(" UNION ")
+        end
 
-            query_conditions.each do |conditions|
-              yield query + conditions
+        def load_type_records_with_dependencies(initializer, oids, initial_bulk_load:)
+          pending_oids = oids.map(&:to_i).uniq.reject { |oid| type_map.key?(oid) }
+          return if pending_oids.empty?
+
+          queried_oids = Set.new
+          records = []
+
+          while pending_oids.any?
+            query_oids = pending_oids.reject { |oid| queried_oids.include?(oid) }
+            break if query_oids.empty?
+
+            queried_oids.merge(query_oids)
+
+            load_types_queries(query_oids, initial_bulk_load) do |query|
+              intent = internal_build_intent(query, "SCHEMA", [], allow_retry: true, materialize_transactions: false)
+              intent.execute!
+              intent.raw_result.each { |row| records << row }
             end
+
+            initial_bulk_load = false
+
+            pending_oids = extract_type_dependency_oids(records).reject do |oid|
+              type_map.key?(oid) || queried_oids.include?(oid)
+            end
+          end
+
+          initializer.run(records)
+        end
+
+        def extract_type_dependency_oids(records)
+          records.flat_map do |row|
+            [row["typelem"], row["typbasetype"], row["rngsubtype"]].filter_map do |raw_oid|
+              raw_oid.to_i.nonzero?
+            end
+          end.uniq
+        end
+
+        def register_unknown_oid_type(oid, column_name)
+          warn "unknown OID #{oid}: failed to recognize type of '#{column_name}'. It will be treated as String."
+          Type.default_value.tap do |cast_type|
+            type_map.register_type(oid, cast_type)
           end
         end
 
