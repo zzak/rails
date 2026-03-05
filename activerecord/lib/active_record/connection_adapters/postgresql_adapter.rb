@@ -956,9 +956,15 @@ module ActiveRecord
           if oids
             yield query + "WHERE t.oid IN (%s)" % oids.join(", ")
           else
-            yield query + initializer.query_conditions_for_known_type_names
-            yield query + initializer.query_conditions_for_known_type_types
-            yield query + initializer.query_conditions_for_array_types
+            query_conditions = [
+              initializer.query_conditions_for_known_type_names,
+              initializer.query_conditions_for_known_type_types,
+              initializer.query_conditions_for_array_types,
+            ].compact
+
+            query_conditions.each do |conditions|
+              yield query + conditions
+            end
           end
         end
 
@@ -1227,6 +1233,7 @@ module ActiveRecord
           @mapped_default_timezone = nil
           @timestamp_decoder = nil
 
+          oids_by_name = OID::WellKnown::TYPE_OIDS
           coders_by_name = {
             "int2" => PG::TextDecoder::Integer,
             "int4" => PG::TextDecoder::Integer,
@@ -1243,16 +1250,12 @@ module ActiveRecord
           coders_by_name["money"] = MoneyDecoder if decode_money
           coders_by_name["bytea"] = decode_bytea ? ByteaDecoder : ByteaMarker
 
-          known_coder_types = coders_by_name.keys.map { |n| quote(n) }
-          query = <<~SQL % known_coder_types.join(", ")
-            SELECT t.oid, t.typname
-            FROM pg_type as t
-            WHERE t.typname IN (%s)
-          SQL
-          intent = internal_build_intent(query, "SCHEMA", [], allow_retry: true, materialize_transactions: false)
-          intent.execute!
-          result = intent.raw_result
-          coders = result.filter_map { |row| construct_coder(row, coders_by_name[row["typname"]]) }
+          coders = coders_by_name.filter_map do |type_name, coder_class|
+            next unless coder_class
+            next unless oid = oids_by_name[type_name]
+
+            coder_class.new(oid: oid, name: type_name)
+          end
 
           map = PG::TypeMapByOid.new
           coders.each { |coder| map.add_coder(coder) }
@@ -1266,11 +1269,6 @@ module ActiveRecord
           # extract timestamp decoder for use in update_typemap_for_default_timezone
           @timestamp_decoder = coders.find { |coder| coder.name == "timestamp" }
           update_typemap_for_default_timezone
-        end
-
-        def construct_coder(row, coder_class)
-          return unless coder_class
-          coder_class.new(oid: row["oid"].to_i, name: row["typname"])
         end
 
         class MoneyDecoder < PG::SimpleDecoder # :nodoc:

@@ -319,6 +319,71 @@ module ActiveRecord
         connection&.disconnect!
       end
 
+      def test_queries_executed_on_fresh_connection_through_first_select
+        reset_connection
+
+        queries = PostgreSQLAdapter.with(decode_dates: false, decode_money: false, decode_bytea: false) do
+          with_timezone_config(default: :utc) do
+            capture_sql(include_schema: true) do
+              ActiveRecord::Base.lease_connection.select_value("SELECT 1+2")
+            end
+          end
+        end.map(&:squish)
+
+        expected_queries = [
+          "SET SESSION IntervalStyle TO 'iso_8601'",
+          "SET SESSION client_min_messages TO 'warning'",
+          "SET SESSION timezone TO 'UTC'",
+          ("SHOW search_path" if @connection.database_version < 18_00_00),
+          /SELECT t\.oid, t\.typname, t\.typelem, t\.typdelim, t\.typinput, r\.rngsubtype, t\.typtype, t\.typbasetype FROM pg_type as t LEFT JOIN pg_range as r ON oid = rngtypid WHERE t\.typname IN \(.+\)/,
+          /SELECT t\.oid, t\.typname, t\.typelem, t\.typdelim, t\.typinput, r\.rngsubtype, t\.typtype, t\.typbasetype FROM pg_type as t LEFT JOIN pg_range as r ON oid = rngtypid WHERE t\.typtype IN \('r', 'e', 'd'\)/,
+          /SELECT t\.oid, t\.typname, t\.typelem, t\.typdelim, t\.typinput, r\.rngsubtype, t\.typtype, t\.typbasetype FROM pg_type as t LEFT JOIN pg_range as r ON oid = rngtypid WHERE t\.typelem IN \(.+\)/,
+          "SELECT 1+2",
+        ].compact
+
+        assert_equal expected_queries.size, queries.size
+        assert expected_queries.zip(queries).all? { |expected, actual| expected === actual }
+      ensure
+        reset_connection
+      end
+
+      def test_queries_executed_on_fresh_connection_with_first_custom_type_lookup
+        @connection.create_enum "postgresql_startup_lookup_enum", ["good", "bad"]
+        @connection.create_table("postgresql_startup_lookup_enums", force: true) do |t|
+          t.column :value, :postgresql_startup_lookup_enum
+        end
+        @connection.execute "INSERT INTO postgresql_startup_lookup_enums (value) VALUES ('good')"
+        reset_connection
+
+        queries = PostgreSQLAdapter.with(decode_dates: false, decode_money: false, decode_bytea: false) do
+          with_timezone_config(default: :utc) do
+            capture_sql(include_schema: true) do
+              result = ActiveRecord::Base.lease_connection.select_all("SELECT value FROM postgresql_startup_lookup_enums LIMIT 1")
+              result.column_types["value"]
+            end
+          end
+        end.map(&:squish)
+
+        expected_queries = [
+          "SET SESSION IntervalStyle TO 'iso_8601'",
+          "SET SESSION client_min_messages TO 'warning'",
+          "SET SESSION timezone TO 'UTC'",
+          ("SHOW search_path" if @connection.database_version < 18_00_00),
+          /SELECT t\.oid, t\.typname, t\.typelem, t\.typdelim, t\.typinput, r\.rngsubtype, t\.typtype, t\.typbasetype FROM pg_type as t LEFT JOIN pg_range as r ON oid = rngtypid WHERE t\.typname IN \(.+\)/,
+          /SELECT t\.oid, t\.typname, t\.typelem, t\.typdelim, t\.typinput, r\.rngsubtype, t\.typtype, t\.typbasetype FROM pg_type as t LEFT JOIN pg_range as r ON oid = rngtypid WHERE t\.typtype IN \('r', 'e', 'd'\)/,
+          /SELECT t\.oid, t\.typname, t\.typelem, t\.typdelim, t\.typinput, r\.rngsubtype, t\.typtype, t\.typbasetype FROM pg_type as t LEFT JOIN pg_range as r ON oid = rngtypid WHERE t\.typelem IN \(.+\)/,
+          "SELECT value FROM postgresql_startup_lookup_enums LIMIT 1",
+        ].compact
+
+        assert_equal expected_queries.size, queries.size
+        assert expected_queries.zip(queries).all? { |expected, actual| expected === actual }
+        assert_not queries.any? { |query| query.match?(/WHERE t\.oid IN \(\d+\)$/) }
+      ensure
+        @connection.drop_table "postgresql_startup_lookup_enums", if_exists: true
+        @connection.drop_enum "postgresql_startup_lookup_enum", if_exists: true
+        reset_connection
+      end
+
       def test_schema_search_path_uses_parameter_status_on_pg18
         skip "parameter_status('search_path') requires PostgreSQL 18+" unless @connection.database_version >= 18_00_00
 

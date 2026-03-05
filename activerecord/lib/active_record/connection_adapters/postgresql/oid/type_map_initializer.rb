@@ -34,8 +34,10 @@ module ActiveRecord
           end
 
           def query_conditions_for_known_type_names
-            known_type_names = @store.keys.map { |n| "'#{n}'" }
-            <<~SQL % known_type_names.join(", ")
+            known_type_names = unresolved_type_names
+            return if known_type_names.empty?
+
+            <<~SQL % known_type_names.map { |name| "'#{name}'" }.join(", ")
               WHERE
                 t.typname IN (%s)
             SQL
@@ -50,7 +52,9 @@ module ActiveRecord
           end
 
           def query_conditions_for_array_types
-            known_type_oids = @store.keys.reject { |k| k.is_a?(String) }
+            known_type_oids = unresolved_array_subtype_oids
+            return if known_type_oids.empty?
+
             <<~SQL % [known_type_oids.join(", ")]
               WHERE
                 t.typelem IN (%s)
@@ -58,6 +62,28 @@ module ActiveRecord
           end
 
           private
+            def unresolved_type_names
+              known_type_oids = @store.keys.grep(Integer)
+              known_types_by_oid = known_type_oids.map { |oid| @store.lookup(oid) }
+
+              @store.keys.grep(String).reject do |type_name|
+                known_types_by_oid.include?(@store.lookup(type_name))
+              end
+            end
+
+            def unresolved_array_subtype_oids
+              known_type_oids = @store.keys.grep(Integer)
+
+              known_type_oids.reject do |subtype_oid|
+                subtype = @store.lookup(subtype_oid)
+
+                known_type_oids.any? do |oid|
+                  type = @store.lookup(oid)
+                  type.is_a?(OID::Array) && type.subtype == subtype
+                end
+              end
+            end
+
             def register_mapped_type(row)
               alias_type row["oid"], row["typname"]
             end
