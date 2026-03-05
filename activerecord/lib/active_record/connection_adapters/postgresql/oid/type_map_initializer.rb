@@ -17,6 +17,8 @@ module ActiveRecord
           end
 
           def run(records)
+            @pending = Hash.new { |h, oid| h[oid] = [] }
+
             nodes = records.reject { |row| @store.key? row["oid"].to_i }
             mapped = nodes.extract! { |row| @store.key? row["typname"] }
             ranges = nodes.extract! { |row| row["typtype"] == "r" }
@@ -125,11 +127,13 @@ module ActiveRecord
               else
                 @store.register_type(oid, oid_type)
               end
+              flush_pending_registrations(oid)
             end
 
             def alias_type(oid, target)
               oid = assert_valid_registration(oid, target)
               @store.alias_type(oid, target)
+              flush_pending_registrations(oid)
             end
 
             def register_with_subtype(oid, target_oid)
@@ -137,7 +141,17 @@ module ActiveRecord
                 register(oid) do |_, *args|
                   yield @store.lookup(target_oid, *args)
                 end
+              else
+                @pending[target_oid] << proc do
+                  register(oid) do |_, *args|
+                    yield @store.lookup(target_oid, *args)
+                  end
+                end
               end
+            end
+
+            def flush_pending_registrations(oid)
+              @pending.delete(oid)&.each(&:call)
             end
 
             def assert_valid_registration(oid, oid_type)
