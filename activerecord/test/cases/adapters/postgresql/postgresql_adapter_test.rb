@@ -1016,7 +1016,7 @@ module ActiveRecord
 
       def test_load_additional_types_cascades_dependency_lookups
         @connection.execute "CREATE DOMAIN postgresql_domain_base AS integer"
-        @connection.execute "CREATE DOMAIN postgresql_domain_nested AS postgresql_domain_base"
+        @connection.execute "CREATE DOMAIN postgresql_domain_nested AS postgresql_domain_base[]"
         nested_array_oid = @connection.query_value("SELECT 'postgresql_domain_nested[]'::regtype::oid").to_i
         reset_connection
 
@@ -1024,8 +1024,7 @@ module ActiveRecord
         lookup_sql = "SELECT '{}'::postgresql_domain_nested[] AS value"
 
         queries = capture_sql(include_schema: true) do
-          result = connection.select_all(lookup_sql)
-          result.column_types["value"]
+          connection.select_all(lookup_sql)
         end.map(&:squish)
         lookup_queries = queries.select { |query| oid_lookup_query?(query) }
         expected_queries = [
@@ -1444,7 +1443,7 @@ module ActiveRecord
         def oid_lookup_query?(query)
           query.start_with?(
             "SELECT t.oid, t.typname, t.typelem, t.typdelim, t.typinput, r.rngsubtype, t.typtype, t.typbasetype " \
-            "FROM pg_type as t LEFT JOIN pg_range as r ON oid = rngtypid WHERE t.oid IN ("
+            "FROM pg_type AS t LEFT JOIN pg_range AS r ON oid = rngtypid WHERE t.oid IN ("
           )
         end
 
@@ -1452,7 +1451,7 @@ module ActiveRecord
           oid_list_pattern = "\\d+(?:,\\s*\\d+)*"
           query_prefix = Regexp.escape(
             "SELECT t.oid, t.typname, t.typelem, t.typdelim, t.typinput, r.rngsubtype, t.typtype, t.typbasetype " \
-            "FROM pg_type as t LEFT JOIN pg_range as r ON oid = rngtypid WHERE "
+            "FROM pg_type AS t LEFT JOIN pg_range AS r ON oid = rngtypid WHERE "
           )
           bulk_clause = if initial_bulk_load
             Regexp.escape(" UNION ") + query_prefix + Regexp.escape("t.typtype IN ('r', 'e', 'd')")

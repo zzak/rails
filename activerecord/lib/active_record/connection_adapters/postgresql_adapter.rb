@@ -366,7 +366,7 @@ module ActiveRecord
 
         @max_identifier_length = nil
         @type_map = nil
-        @initial_bulk_types_loaded = false
+        @type_map_queried = false
         @raw_connection = nil
         @notice_receiver_sql_warnings = []
 
@@ -396,7 +396,7 @@ module ActiveRecord
           else
             @type_map = Type::HashLookupTypeMap.new
           end
-          @initial_bulk_types_loaded = false
+          @type_map_queried = false
 
           initialize_type_map
         end
@@ -932,58 +932,37 @@ module ActiveRecord
         end
 
         def load_additional_types(oids)
-          initial_bulk_load = !@initial_bulk_types_loaded
           initializer = OID::TypeMapInitializer.new(type_map)
-          load_type_records_with_dependencies(initializer, oids, initial_bulk_load: initial_bulk_load)
-          @initial_bulk_types_loaded = true if initial_bulk_load
+
+          queried_oids = Set.new
+          pending_oids = oids.map(&:to_i).uniq.reject { |oid| type_map.key?(oid) }
+
+          until pending_oids.empty?
+            queried_oids.merge(pending_oids)
+
+            load_types_queries(pending_oids, !@type_map_queried) do |query|
+              intent = internal_build_intent(query, "SCHEMA", [], allow_retry: true, materialize_transactions: false)
+              intent.execute!
+              initializer.run(intent.raw_result.to_a)
+            end
+
+            @type_map_queried = true
+
+            pending_oids = initializer.pending_oids.reject { |oid| queried_oids.include?(oid) }
+          end
         end
 
         def load_types_queries(oids, initial_bulk_load)
-          query = <<~SQL
+          query = <<~SQL.squish
             SELECT t.oid, t.typname, t.typelem, t.typdelim, t.typinput, r.rngsubtype, t.typtype, t.typbasetype
-            FROM pg_type as t
-            LEFT JOIN pg_range as r ON oid = rngtypid
+            FROM pg_type AS t
+            LEFT JOIN pg_range AS r ON oid = rngtypid
           SQL
-          queries = ["#{query}WHERE t.oid IN (#{oids.join(", ")})"]
-          queries << "#{query}WHERE t.typtype IN ('r', 'e', 'd')" if initial_bulk_load
-          yield queries.join(" UNION ")
-        end
 
-        def load_type_records_with_dependencies(initializer, oids, initial_bulk_load:)
-          pending_oids = oids.map(&:to_i).uniq.reject { |oid| type_map.key?(oid) }
-          return if pending_oids.empty?
-
-          queried_oids = Set.new
-          records = []
-
-          while pending_oids.any?
-            query_oids = pending_oids.reject { |oid| queried_oids.include?(oid) }
-            break if query_oids.empty?
-
-            queried_oids.merge(query_oids)
-
-            load_types_queries(query_oids, initial_bulk_load) do |query|
-              intent = internal_build_intent(query, "SCHEMA", [], allow_retry: true, materialize_transactions: false)
-              intent.execute!
-              intent.raw_result.each { |row| records << row }
-            end
-
-            initial_bulk_load = false
-
-            pending_oids = extract_type_dependency_oids(records).reject do |oid|
-              type_map.key?(oid) || queried_oids.include?(oid)
-            end
-          end
-
-          initializer.run(records)
-        end
-
-        def extract_type_dependency_oids(records)
-          records.flat_map do |row|
-            [row["typelem"], row["typbasetype"], row["rngsubtype"]].filter_map do |raw_oid|
-              raw_oid.to_i.nonzero?
-            end
-          end.uniq
+          queries = []
+          queries << "#{query}\nWHERE t.oid IN (#{oids.join(", ")})" unless oids.empty?
+          queries << "#{query}\nWHERE t.typtype IN ('r', 'e', 'd')" if initial_bulk_load
+          yield queries.join("\nUNION\n")
         end
 
         def register_unknown_oid_type(oid, column_name)
