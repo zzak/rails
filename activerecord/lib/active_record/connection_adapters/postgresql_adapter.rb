@@ -809,7 +809,7 @@ module ActiveRecord
           self.class.register_class_with_precision m, "timestamp", OID::Timestamp, timezone: @default_timezone
           self.class.register_class_with_precision m, "timestamptz", OID::TimestampWithTimeZone
 
-          OID::WellKnown.register_types(m)
+          OID::WellKnown.register_types(m, server_version: database_version)
 
           @@type_mapping_callbacks = [] unless defined?(@@type_mapping_callbacks)
           @@type_mapping_callbacks.each { |block| block.call(m) }
@@ -961,7 +961,15 @@ module ActiveRecord
 
           queries = []
           queries << "#{query}\nWHERE t.oid IN (#{oids.join(", ")})" unless oids.empty?
-          queries << "#{query}\nWHERE t.typtype IN ('r', 'e', 'd')" if initial_bulk_load
+          if initial_bulk_load
+            bulk_filter = "t.typtype IN ('r', 'e', 'd')"
+
+            if database_version < OID::WellKnown::FIRST_UNKNOWN_PG_VERSION
+              bulk_filter += " AND t.typnamespace != 'pg_catalog'::regnamespace"
+            end
+
+            queries << "#{query}\nWHERE #{bulk_filter}"
+          end
           yield queries.join("\nUNION\n")
         end
 
@@ -1237,7 +1245,7 @@ module ActiveRecord
           @mapped_default_timezone = nil
           @timestamp_decoder = nil
 
-          oids_by_name = OID::WellKnown::TYPE_OIDS
+          oids_by_name = OID::WellKnown.type_oids_for(server_version: database_version)
           coders_by_name = {
             "int2" => PG::TextDecoder::Integer,
             "int4" => PG::TextDecoder::Integer,

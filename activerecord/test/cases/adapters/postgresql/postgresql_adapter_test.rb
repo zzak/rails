@@ -1014,6 +1014,27 @@ module ActiveRecord
         reset_connection
       end
 
+      def test_bulk_oid_lookup_query_excludes_system_catalog_types_for_known_servers
+        query = nil
+
+        @connection.stub(:database_version, 14_00_00) do
+          @connection.send(:load_types_queries, [42], true) { |sql| query = sql.squish }
+        end
+
+        assert_includes query, "WHERE t.typtype IN ('r', 'e', 'd') AND t.typnamespace != 'pg_catalog'::regnamespace"
+      end
+
+      def test_bulk_oid_lookup_query_keeps_system_catalog_types_for_newer_servers
+        query = nil
+
+        @connection.stub(:database_version, ActiveRecord::ConnectionAdapters::PostgreSQL::OID::WellKnown::FIRST_UNKNOWN_PG_VERSION) do
+          @connection.send(:load_types_queries, [42], true) { |sql| query = sql.squish }
+        end
+
+        assert_includes query, "WHERE t.typtype IN ('r', 'e', 'd')"
+        assert_not_includes query, "t.typnamespace !="
+      end
+
       def test_load_additional_types_cascades_dependency_lookups
         @connection.execute "CREATE DOMAIN postgresql_domain_base AS integer"
         @connection.execute "CREATE DOMAIN postgresql_domain_nested AS postgresql_domain_base[]"
@@ -1045,10 +1066,11 @@ module ActiveRecord
         # Keep anti-OR behavior from #40876 visible: OID lookups should stay index-driven,
         # and only the typtype='d' branch may seq-scan.
         scan_summary = pg_type_scan_nodes.map { |node| [node["Index Name"], node["Filter"]] }.sort_by { |(index_name, filter)| [index_name.to_s, filter.to_s] }
-        assert_equal [
-          [nil, "(typtype = ANY ('{r,e,d}'::\"char\"[]))"],
-          ["pg_type_oid_index", nil],
-        ], scan_summary
+        assert_equal 2, scan_summary.length
+        assert_includes scan_summary, ["pg_type_oid_index", nil]
+
+        seq_scan_filter = scan_summary.find { |index_name, _| index_name.nil? }.last
+        assert_includes seq_scan_filter, "typtype = ANY ('{r,e,d}'::\"char\"[])"
       ensure
         @connection.execute "DROP DOMAIN IF EXISTS postgresql_domain_nested"
         @connection.execute "DROP DOMAIN IF EXISTS postgresql_domain_base"
@@ -1454,7 +1476,8 @@ module ActiveRecord
             "FROM pg_type AS t LEFT JOIN pg_range AS r ON oid = rngtypid WHERE "
           )
           bulk_clause = if initial_bulk_load
-            Regexp.escape(" UNION ") + query_prefix + Regexp.escape("t.typtype IN ('r', 'e', 'd')")
+            Regexp.escape(" UNION ") + query_prefix + Regexp.escape("t.typtype IN ('r', 'e', 'd')") +
+              "(?:" + Regexp.escape(" AND t.typnamespace != 'pg_catalog'::regnamespace") + ")?"
           else
             ""
           end
