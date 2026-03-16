@@ -1,3 +1,7 @@
+*   Batch SQL statements when creating tables to improve performance.
+
+    *Andrew Novoselac*
+
 *   Support PostgreSQL `RESET` on readonly queries.
 
     ```ruby
