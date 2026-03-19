@@ -1032,17 +1032,24 @@ module ActiveRecord
           variables = @config.fetch(:variables, {}).stringify_keys
 
           # Increase timeout so the server doesn't disconnect us.
-          wait_timeout = self.class.type_cast_config_to_integer(@config[:wait_timeout])
-          wait_timeout = 2147483 unless wait_timeout.is_a?(Integer)
-          variables["wait_timeout"] = wait_timeout
+          # Set to false in config to skip.
+          unless @config[:wait_timeout] == false
+            wait_timeout = self.class.type_cast_config_to_integer(@config[:wait_timeout])
+            wait_timeout = 2147483 unless wait_timeout.is_a?(Integer)
+            variables["wait_timeout"] = wait_timeout
+          end
 
           defaults = [":default", :default].to_set
 
           # Make MySQL reject illegal values rather than truncating or blanking them, see
           # https://dev.mysql.com/doc/refman/en/sql-mode.html#sqlmode_strict_all_tables
           # If the user has provided another value for sql_mode, don't replace it.
-          if sql_mode = variables.delete("sql_mode")
-            sql_mode = quote(sql_mode)
+          # Set sql_mode to false or :default in variables to skip.
+          if variables.key?("sql_mode")
+            sql_mode_value = variables.delete("sql_mode")
+            unless sql_mode_value == false || defaults.include?(sql_mode_value)
+              sql_mode = quote(sql_mode_value)
+            end
           elsif !defaults.include?(strict_mode?)
             if strict_mode?
               sql_mode = "CONCAT(@@sql_mode, ',STRICT_ALL_TABLES')"
