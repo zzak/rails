@@ -85,6 +85,50 @@ class ErrorTest < ActiveModel::TestCase
     assert subject.match?(:mineral, :not_enough, count: 2)
   end
 
+  # strict_match?
+
+  test "strict_match? returns true when attribute, type, and options all match" do
+    error = ActiveModel::Error.new(Person.new, :name, :too_short, count: 5)
+    assert error.strict_match?(:name, :too_short, count: 5)
+  end
+
+  test "strict_match? returns false when attribute does not match" do
+    error = ActiveModel::Error.new(Person.new, :name, :too_short, count: 5)
+    assert_not error.strict_match?(:age, :too_short, count: 5)
+  end
+
+  test "strict_match? returns false when type does not match" do
+    error = ActiveModel::Error.new(Person.new, :name, :too_short, count: 5)
+    assert_not error.strict_match?(:name, :too_long, count: 5)
+  end
+
+  test "strict_match? returns false when option values differ" do
+    error = ActiveModel::Error.new(Person.new, :name, :too_short, count: 5)
+    assert_not error.strict_match?(:name, :too_short, count: 10)
+  end
+
+  test "strict_match? returns false when options are missing from check" do
+    error = ActiveModel::Error.new(Person.new, :name, :too_short, count: 5)
+    assert_not error.strict_match?(:name, :too_short)
+  end
+
+  test "strict_match? ignores callback and message options" do
+    error = ActiveModel::Error.new(
+      Person.new,
+      :name,
+      :too_short,
+      count: 5,
+      if: :foo,
+      unless: :bar,
+      on: :create,
+      allow_nil: true,
+      allow_blank: true,
+      strict: true,
+      message: "custom"
+    )
+    assert error.strict_match?(:name, :too_short, count: 5)
+  end
+
   # message
 
   test "message with type as a symbol" do
