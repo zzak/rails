@@ -409,24 +409,24 @@ module ActiveRecord
         end
 
         def matches_foreign_key?(record)
-          reflection_fk = reflection.foreign_key
+          (foreign_key_for?(record) && record_foreign_key_matches_owner?(record)) ||
+            (foreign_key_for?(owner) && owner_foreign_key_matches_record?(record))
+        end
 
-          if reflection_fk.is_a?(Array)
-            reflection_pk = Array(reflection.association_primary_key)
+        def record_foreign_key_matches_owner?(record)
+          foreign_key_values(record) == primary_key_values(owner)
+        end
 
-            return false unless reflection_fk.all? { |key| owner._has_attribute?(key) }
-            return false unless reflection_pk.all? { |key| record._has_attribute?(key) }
+        def owner_foreign_key_matches_record?(record)
+          foreign_key_values(owner) == primary_key_values(record)
+        end
 
-            owner_fk_values = reflection_fk.map { |key| owner.read_attribute(key) }
-            record_pk_values = reflection_pk.map { |key| record.read_attribute(key) }
+        def foreign_key_values(record)
+          Array(reflection.foreign_key).map { |key| record.read_attribute(key) }
+        end
 
-            owner_fk_values == record_pk_values
-          elsif foreign_key_for?(record)
-            record.read_attribute(reflection_fk) == owner.id ||
-              (foreign_key_for?(owner) && owner.read_attribute(reflection_fk) == record.id)
-          else
-            owner.read_attribute(reflection_fk) == record.id
-          end
+        def primary_key_values(record)
+          Array(reflection.association_primary_key).map { |key| record.read_attribute(key) }
         end
     end
   end
