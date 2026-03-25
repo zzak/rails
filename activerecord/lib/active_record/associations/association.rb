@@ -426,7 +426,7 @@ module ActiveRecord
         end
 
         def primary_key_values(record)
-          Array(reflection.association_primary_key).map { |key| record.read_attribute(key) }
+          Array(reflection.association_primary_key(record.class)).map { |key| record.read_attribute(key) }
         end
     end
   end
