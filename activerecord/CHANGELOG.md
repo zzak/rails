@@ -1,3 +1,7 @@
+*   MySQL error 1046 (`ER_NO_DB_ERROR: No database selected`) is now retryable as a `ConnectionFailed` exception
+
+    *Clay Harmon*
+
 *   Batch SQL statements when creating tables to improve performance.
 
     *Andrew Novoselac*
