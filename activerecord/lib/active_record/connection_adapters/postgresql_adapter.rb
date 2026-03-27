@@ -34,7 +34,7 @@ module ActiveRecord
     # * <tt>:password</tt> - Password to be used if the server demands password authentication.
     # * <tt>:database</tt> - Defaults to be the same as the username.
     # * <tt>:schema_search_path</tt> - An optional schema search path for the connection given
-    #   as a string of comma-separated schema names. This is backward-compatible with the <tt>:schema_order</tt> option.
+    #   as a string of comma-separated schema names.
     # * <tt>:encoding</tt> - An optional client encoding that is used in a <tt>SET client_encoding TO
     #   <encoding></tt> call on the connection.
     # * <tt>:min_messages</tt> - An optional client min messages that is used in a
@@ -1075,6 +1075,12 @@ module ActiveRecord
           # search_path uses unquoted, comma-separated identifiers so it
           # goes through the existing setter rather than internal_set_config.
           unless @config[:schema_search_path] == false
+            if @config[:schema_order]
+              ActiveRecord.deprecator.warn(<<~MSG.squish)
+                The `schema_order` option in PostgreSQL database configurations is
+                deprecated and will be removed in Rails 8.3. Use `schema_search_path` instead.
+              MSG
+            end
             self.schema_search_path = @config[:schema_search_path] || @config[:schema_order]
           end
 
