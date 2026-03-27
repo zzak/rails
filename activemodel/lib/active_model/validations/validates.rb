@@ -87,11 +87,16 @@ module ActiveModel
       #   if the validation should occur (e.g. <tt>if: :allow_validation</tt>,
       #   or <tt>if: Proc.new { |user| user.signup_step > 2 }</tt>). The method,
       #   proc or string should return or evaluate to a +true+ or +false+ value.
+      #   Multiple methods or procs can be passed as an array to check multiple
+      #   conditions, all of which must pass for validation to occur
+      #   (e.g. <tt>if: [:allow_validation, Proc.new { |user| user.signup_step > 2 }]</tt>)
       # * <tt>:unless</tt> - Specifies a method, proc, or string to call to determine
       #   if the validation should not occur (e.g. <tt>unless: :skip_validation</tt>,
       #   or <tt>unless: Proc.new { |user| user.signup_step <= 2 }</tt>). The
       #   method, proc, or string should return or evaluate to a +true+ or
-      #   +false+ value.
+      #   +false+ value. Multiple methods or procs can be passed as an array to
+      #   check multiple conditions, all of which must pass for validation not to occur
+      #   (e.g. <tt>unless: [:skip_validation, Proc.new { |user| user.signup_step <= 2 }]</tt>)
       # * <tt>:allow_nil</tt> - Skip validation if the attribute is +nil+.
       # * <tt>:allow_blank</tt> - Skip validation if the attribute is blank.
       # * <tt>:strict</tt> - If the <tt>:strict</tt> option is set to true
