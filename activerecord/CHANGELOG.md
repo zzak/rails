@@ -1,3 +1,14 @@
+*   Deprecate the `strict` option in MySQL database configurations.
+
+    The `strict` option for MySQL will be removed in Rails 8.3 because it is the default behavior.
+
+    To change the default behavior of `strict`, use `variables: { sql_mode: "..." }` to configure `sql_mode` directly.
+
+
+    `strict: false` can be replaced with `variables: { sql_mode: "" }`, and `strict: :default` can be replaced with `variables: { sql_mode: :default }`.
+
+    *Eileen M. Uchitelle*
+
 *   Allow configuring `SET` queriers for the PostgreSQL and MySQL adapters.
 
     Individual settings can be skipped by setting them to `false` in

@@ -722,6 +722,15 @@ module ActiveRecord
       end
 
       def strict_mode?
+        if @config.key?(:strict) && !@strict_mode_deprecation_warned
+          @strict_mode_deprecation_warned = true
+          ActiveRecord.deprecator.warn(<<~MSG.squish)
+            The `strict` option in database configurations is deprecated and
+            will be removed in Rails 8.3. Use `variables: { sql_mode: "..." }`
+            to configure sql_mode directly instead.
+          MSG
+        end
+
         self.class.type_cast_config_to_boolean(@config.fetch(:strict, true))
       end
 
