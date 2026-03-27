@@ -776,6 +776,47 @@ class ErrorsTest < ActiveModel::TestCase
     end
   end
 
+  test "import wraps error as NestedError" do
+    person = Person.new
+    original_error = ActiveModel::Error.new(Person.new, :name, :invalid)
+
+    person.errors.import(original_error)
+
+    assert_equal 1, person.errors.size
+    assert_instance_of ActiveModel::NestedError, person.errors.first
+  end
+
+  test "import retains reference to inner error" do
+    person = Person.new
+    original_error = ActiveModel::Error.new(Person.new, :name, :invalid)
+
+    person.errors.import(original_error)
+
+    assert_equal original_error, person.errors.first.inner_error
+  end
+
+  test "import with attribute override" do
+    person = Person.new
+    original_error = ActiveModel::Error.new(Person.new, :name, :invalid)
+
+    person.errors.import(original_error, attribute: "age")
+
+    imported = person.errors.first
+    assert_equal :age, imported.attribute
+    assert_equal :invalid, imported.type
+  end
+
+  test "import with type override" do
+    person = Person.new
+    original_error = ActiveModel::Error.new(Person.new, :name, :invalid)
+
+    person.errors.import(original_error, type: "blank")
+
+    imported = person.errors.first
+    assert_equal :name, imported.attribute
+    assert_equal :blank, imported.type
+  end
+
   test "merge errors" do
     errors = ActiveModel::Errors.new(Person.new)
     errors.add(:name, :invalid)
