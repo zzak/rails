@@ -143,6 +143,18 @@ module ActiveRecord
         end
       end
 
+      def test_schema_order_deprecation
+        db_config = ActiveRecord::Base.configurations.configs_for(env_name: "arunit", name: "primary")
+        assert_deprecated(ActiveRecord.deprecator) do
+          connection = ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.new(
+            db_config.configuration_hash.merge(schema_order: "public")
+          )
+          connection.connect!
+          assert_equal "public", connection.schema_search_path
+          connection.disconnect!
+        end
+      end
+
       def test_configure_connection_sets_default_settings
         db_config = ActiveRecord::Base.configurations.configs_for(env_name: "arunit", name: "primary")
         connection = ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.new(db_config.configuration_hash)
