@@ -717,6 +717,36 @@ class ErrorsTest < ActiveModel::TestCase
     assert_equal ["is invalid"], errors.delete(:name)
   end
 
+  test "delete with type removes only errors matching attribute and type" do
+    errors = ActiveModel::Errors.new(Person.new)
+    errors.add(:name, :blank)
+    errors.add(:name, :invalid)
+
+    errors.delete(:name, :blank)
+
+    assert_not errors.added?(:name, :blank)
+    assert errors.added?(:name, :invalid)
+  end
+
+  test "delete with type and options removes only exact matches" do
+    errors = ActiveModel::Errors.new(Person.new)
+    errors.add(:name, :too_short, count: 5)
+    errors.add(:name, :too_short, count: 10)
+
+    errors.delete(:name, :too_short, count: 5)
+
+    assert_equal 1, errors.where(:name, :too_short).size
+    assert errors.added?(:name, :too_short, count: 10)
+  end
+
+  test "delete with type returns deleted messages" do
+    errors = ActiveModel::Errors.new(Person.new)
+    errors.add(:name, :blank)
+    errors.add(:name, :invalid)
+
+    assert_equal ["can't be blank"], errors.delete(:name, :blank)
+  end
+
   test "clear removes details" do
     person = Person.new
     person.errors.add(:name, :invalid)
