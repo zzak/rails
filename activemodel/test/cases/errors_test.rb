@@ -833,6 +833,23 @@ class ErrorsTest < ActiveModel::TestCase
     assert_equal({}, errors.details)
   end
 
+  test "to_hash with full_messages" do
+    person = Person.new
+    person.errors.add(:name, "cannot be blank")
+
+    assert_equal({ name: ["name cannot be blank"] }, person.errors.to_hash(true))
+  end
+
+  test "uniq! removes duplicate errors" do
+    errors = ActiveModel::Errors.new(Person.new)
+    errors.add(:name, :invalid)
+    errors.add(:name, :invalid)
+
+    assert_equal 2, errors.size
+    errors.uniq!
+    assert_equal 1, errors.size
+  end
+
   test "inspect" do
     errors = ActiveModel::Errors.new(Person.new)
     errors.add(:base)
