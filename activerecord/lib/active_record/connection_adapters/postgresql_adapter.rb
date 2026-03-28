@@ -366,6 +366,7 @@ module ActiveRecord
 
         @max_identifier_length = nil
         @type_map = nil
+        @type_map_queried = false
         @raw_connection = nil
         @notice_receiver_sql_warnings = []
 
@@ -395,6 +396,7 @@ module ActiveRecord
           else
             @type_map = Type::HashLookupTypeMap.new
           end
+          @type_map_queried = false
 
           initialize_type_map
         end
@@ -807,7 +809,7 @@ module ActiveRecord
           self.class.register_class_with_precision m, "timestamp", OID::Timestamp, timezone: @default_timezone
           self.class.register_class_with_precision m, "timestamptz", OID::TimestampWithTimeZone
 
-          load_additional_types
+          OID::WellKnown.register_types(m, server_version: database_version)
 
           @@type_mapping_callbacks = [] unless defined?(@@type_mapping_callbacks)
           @@type_mapping_callbacks.each { |block| block.call(m) }
@@ -924,40 +926,57 @@ module ActiveRecord
         end
 
         def get_oid_type(oid, fmod, column_name, sql_type = "")
-          if !type_map.key?(oid)
-            load_additional_types([oid])
-          end
+          load_additional_types([oid]) unless type_map.key?(oid)
 
-          type_map.fetch(oid, fmod, sql_type) {
-            warn "unknown OID #{oid}: failed to recognize type of '#{column_name}'. It will be treated as String."
-            Type.default_value.tap do |cast_type|
-              type_map.register_type(oid, cast_type)
-            end
-          }
+          type_map.fetch(oid, fmod, sql_type) { register_unknown_oid_type(oid, column_name) }
         end
 
-        def load_additional_types(oids = nil)
+        def load_additional_types(oids)
           initializer = OID::TypeMapInitializer.new(type_map)
-          load_types_queries(initializer, oids) do |query|
-            intent = internal_build_intent(query, "SCHEMA", [], allow_retry: true, materialize_transactions: false)
-            intent.execute!
-            records = intent.raw_result
-            initializer.run(records)
+
+          queried_oids = Set.new
+          pending_oids = oids.map(&:to_i).uniq.reject { |oid| type_map.key?(oid) }
+
+          until pending_oids.empty?
+            queried_oids.merge(pending_oids)
+
+            load_types_queries(pending_oids, !@type_map_queried) do |query|
+              intent = internal_build_intent(query, "SCHEMA", [], allow_retry: true, materialize_transactions: false)
+              intent.execute!
+              initializer.run(intent.raw_result.to_a)
+            end
+
+            @type_map_queried = true
+
+            pending_oids = initializer.pending_oids.reject { |oid| queried_oids.include?(oid) }
           end
         end
 
-        def load_types_queries(initializer, oids)
-          query = <<~SQL
+        def load_types_queries(oids, initial_bulk_load)
+          query = <<~SQL.squish
             SELECT t.oid, t.typname, t.typelem, t.typdelim, t.typinput, r.rngsubtype, t.typtype, t.typbasetype
-            FROM pg_type as t
-            LEFT JOIN pg_range as r ON oid = rngtypid
+            FROM pg_type AS t
+            LEFT JOIN pg_range AS r ON oid = rngtypid
           SQL
-          if oids
-            yield query + "WHERE t.oid IN (%s)" % oids.join(", ")
-          else
-            yield query + initializer.query_conditions_for_known_type_names
-            yield query + initializer.query_conditions_for_known_type_types
-            yield query + initializer.query_conditions_for_array_types
+
+          queries = []
+          queries << "#{query}\nWHERE t.oid IN (#{oids.join(", ")})" unless oids.empty?
+          if initial_bulk_load
+            bulk_filter = "t.typtype IN ('r', 'e', 'd')"
+
+            if database_version < OID::WellKnown::FIRST_UNKNOWN_PG_VERSION
+              bulk_filter += " AND t.typnamespace != 'pg_catalog'::regnamespace"
+            end
+
+            queries << "#{query}\nWHERE #{bulk_filter}"
+          end
+          yield queries.join("\nUNION\n")
+        end
+
+        def register_unknown_oid_type(oid, column_name)
+          warn "unknown OID #{oid}: failed to recognize type of '#{column_name}'. It will be treated as String."
+          Type.default_value.tap do |cast_type|
+            type_map.register_type(oid, cast_type)
           end
         end
 
@@ -1226,6 +1245,7 @@ module ActiveRecord
           @mapped_default_timezone = nil
           @timestamp_decoder = nil
 
+          oids_by_name = OID::WellKnown.type_oids_for(server_version: database_version)
           coders_by_name = {
             "int2" => PG::TextDecoder::Integer,
             "int4" => PG::TextDecoder::Integer,
@@ -1242,16 +1262,12 @@ module ActiveRecord
           coders_by_name["money"] = MoneyDecoder if decode_money
           coders_by_name["bytea"] = decode_bytea ? ByteaDecoder : ByteaMarker
 
-          known_coder_types = coders_by_name.keys.map { |n| quote(n) }
-          query = <<~SQL % known_coder_types.join(", ")
-            SELECT t.oid, t.typname
-            FROM pg_type as t
-            WHERE t.typname IN (%s)
-          SQL
-          intent = internal_build_intent(query, "SCHEMA", [], allow_retry: true, materialize_transactions: false)
-          intent.execute!
-          result = intent.raw_result
-          coders = result.filter_map { |row| construct_coder(row, coders_by_name[row["typname"]]) }
+          coders = coders_by_name.filter_map do |type_name, coder_class|
+            next unless coder_class
+            next unless oid = oids_by_name[type_name]
+
+            coder_class.new(oid: oid, name: type_name)
+          end
 
           map = PG::TypeMapByOid.new
           coders.each { |coder| map.add_coder(coder) }
@@ -1265,11 +1281,6 @@ module ActiveRecord
           # extract timestamp decoder for use in update_typemap_for_default_timezone
           @timestamp_decoder = coders.find { |coder| coder.name == "timestamp" }
           update_typemap_for_default_timezone
-        end
-
-        def construct_coder(row, coder_class)
-          return unless coder_class
-          coder_class.new(oid: row["oid"].to_i, name: row["typname"])
         end
 
         class MoneyDecoder < PG::SimpleDecoder # :nodoc:
