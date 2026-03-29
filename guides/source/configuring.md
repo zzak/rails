@@ -191,7 +191,7 @@ The following configuration methods are to be called on a `Rails::Railtie` objec
 #### `config.action_on_early_load_hook`
 
 Controls what happens when a load hook is violated before the Rails application is initialized.
-The value is `:log` by default, which will log when when a load hook is invoked early. The value can alternatively be `raise`, which will raise a `LoadError` instead of logging.
+The value is `:log` by default, which will log when a load hook is invoked early. The value can alternatively be `raise`, which will raise a `LoadError` instead of logging.
 
 #### `config.add_autoload_paths_to_load_path`
 
