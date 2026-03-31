@@ -38,8 +38,6 @@ module Rails
   end
 
   class << self
-    @application = @app_class = nil
-
     attr_writer :application
     attr_accessor :app_class, :cache, :logger
     def application
